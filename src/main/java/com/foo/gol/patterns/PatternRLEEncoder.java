@@ -2,7 +2,7 @@ package com.foo.gol.patterns;
 
 import com.foo.gol.logic.ICell;
 
-import java.util.List;
+import java.util.*;
 
 public class PatternRLEEncoder {
 	public static String encode(int width, List<ICell> cells) throws InvalidRLEFormatException {
@@ -20,10 +20,25 @@ public class PatternRLEEncoder {
 		if (pattern.length % width != 0) {
 			throw new InvalidRLEFormatException("Cells list must have size consistent with specified width");
 		}
+		// allocate builder to easily enough space...
 		StringBuilder builder = new StringBuilder(20 + pattern.length);
 		builder.append("x=").append(width).append(",y=").append(pattern.length / width).append("\n");
 		int rows = pattern.length / width;
 		int columns = width;
+		// look for blank lines...
+		Set<Integer> blankLineIndices = new HashSet<>();
+		for (int row = 0; row < rows; row++) {
+			boolean anyOn = false;
+			for (int column = 0; column < columns; column++) {
+				if (pattern[(row * columns) + column] != 0) {
+					anyOn = true;
+					break;
+				}
+			}
+			if (!anyOn) {
+				blankLineIndices.add(row);
+			}
+		}
 		String line = "";
 		for (int row = 0; row < rows; row++) {
 			String rowString = "";
@@ -51,6 +66,14 @@ public class PatternRLEEncoder {
 			if (rowString.equals(columns + "b") || rowString.isEmpty()) {
 				rowString = "b";
 			}
+			int blankLinesAfterThisRow = checkBlankLinesAfterRow(row, blankLineIndices);
+			if (blankLinesAfterThisRow > 0) {
+				row += blankLinesAfterThisRow;
+				if (row < rows) {
+					// only add row skip if we haven't skipped to the end
+					rowString += (blankLinesAfterThisRow + 1);
+				}
+			}
 			rowString += (row == (rows - 1) ? "!" : "$");
 			if ((line.length() + rowString.length()) > 80) {
 				builder.append(line);
@@ -61,5 +84,15 @@ public class PatternRLEEncoder {
 		}
 		builder.append(line);
 		return builder.toString();
+	}
+
+	private static int checkBlankLinesAfterRow(int row, Set<Integer> blankLineIndices) {
+		int result = 0;
+		int onRow = row + 1;
+		while (blankLineIndices.contains(onRow)) {
+			onRow++;
+			result++;
+		}
+		return result;
 	}
 }

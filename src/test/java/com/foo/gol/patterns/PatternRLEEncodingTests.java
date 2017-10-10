@@ -74,6 +74,43 @@ public class PatternRLEEncodingTests extends TestCase {
 				assertEquals("Row " + row + ", column " + column + " should be " + (checkPattern[row][column] != 0 ? "ALIVE" : "DEAD"), checkPattern[row][column] != 0, decodedPattern.cell(row, column).isAlive());
 			}
 		}
+	}
 
+	public void testDartEncode() throws Exception {
+		int[] pattern = new int[] {
+				0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,
+				0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,
+				0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // blank line!
+				0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,
+				0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,
+				0,1,1,0,0,0,1,0,1,0,0,0,1,1,0,
+				1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,
+				0,1,0,1,1,0,1,0,1,0,1,1,0,1,0
+		};
+		String rleEncoded = PatternRLEEncoder.encode(15, pattern);
+		String[] lines = rleEncoded.split("\n");
+		assertEquals("x=15,y=10", lines[0]);
+		StringBuilder rleLinesBuilder = new StringBuilder();
+		for (int i = 1; i < lines.length; i++) {
+			rleLinesBuilder.append(lines[i]);
+		}
+		String[] rleLines = rleLinesBuilder.toString().split("\\$");
+//		assertEquals(9, rleLines.length);
+		String[] checkLines = new String[] {
+				"7bo",
+				"6bobo",
+				"5bo3bo",
+				"6b3o2", // should end with number to increment past blank line
+				"4b2o3b2o",
+				"2bo3bobo3bo",
+				"b2o3bobo3b2o",
+				"o5bobo5bo",
+				"bob2obobob2obo!"
+		};
+		for (int i = 0; i < checkLines.length; i++) {
+			assertEquals(checkLines[i], rleLines[i]);
+		}
 	}
 }

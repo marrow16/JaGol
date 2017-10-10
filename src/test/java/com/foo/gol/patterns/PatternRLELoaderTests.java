@@ -80,4 +80,44 @@ public class PatternRLELoaderTests extends TestCase {
 			}
 		}
 	}
+
+	public void testLoadDartFromString() throws Exception {
+		String dartRle = "#N Dart\n" +
+				"#O David Bell\n" +
+				"#C An orthogonal period 3 spaceship with speed c/3 that was found in May 1992.\n" +
+				"#C www.conwaylife.com/wiki/index.php?title=Dart\n" +
+				"x = 15, y = 10, rule = B3/S23\n" +
+				"7bo7b$" +
+				"6bobo6b$" +
+				"5bo3bo5b$" +
+				"6b3o6b2$" + // ends with extra line
+				"4b2o3b2o4b$" +
+				"2bo3bobo3bo2b$" +
+				"b2o3bobo3b2ob$" +
+				"o5bobo5bo$" +
+				"bob2obobob2obo!";
+		IPattern pattern = PatternRLELoader.load("Test", dartRle);
+		assertEquals("Dart", pattern.name());
+		assertEquals(12, pattern.rows());
+		assertEquals(17, pattern.columns());
+		int[][] checkPattern = new int[][] {
+				new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				new int[] {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
+				new int[] {0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0},
+				new int[] {0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0},
+				new int[] {0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0},
+				new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				new int[] {0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0},
+				new int[] {0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0},
+				new int[] {0,0,1,1,0,0,0,1,0,1,0,0,0,1,1,0,0},
+				new int[] {0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0},
+				new int[] {0,0,1,0,1,1,0,1,0,1,0,1,1,0,1,0,0},
+				new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+		};
+		for (int row = 0; row < 12; row++) {
+			for (int column = 0; column < 17; column++) {
+				assertEquals("Row " + row + ", column " + column + " should be " + (checkPattern[row][column] != 0 ? "ALIVE" : "DEAD"), checkPattern[row][column] != 0, pattern.cell(row, column).isAlive());
+			}
+		}
+	}
 }

@@ -67,15 +67,15 @@ public class PatternRLELoader {
 		if (rleLines.length > (rows - 2)) {
 			throw new InvalidRLEFormatException("Invalid RLE format - too many rows");
 		}
-		for (int row = 0; row < rleLines.length; row++) {
-			int actualRow = row + 1;
-			decodeRleRow(columns, actualRow, rleLines[row], pattern);
+		int actualRow = 1;
+		for (int rowLine = 0; rowLine < rleLines.length; rowLine++) {
+			int addRow = decodeRleRow(columns, actualRow, rleLines[rowLine], pattern);
+			actualRow += addRow;
 		}
 		return new Pattern(name, columns, pattern);
-
 	}
 
-	private static void decodeRleRow(int columns, int row, String rle, int[] pattern) throws InvalidRLEFormatException {
+	private static int decodeRleRow(int columns, int row, String rle, int[] pattern) throws InvalidRLEFormatException {
 		int runCount = 0;
 		int column = 1;
 		for (int c = 0; c < rle.length();) {
@@ -113,6 +113,8 @@ public class PatternRLELoader {
 				throw new InvalidRLEFormatException("Invalid RLE format - invalid character token '" + ch + "' in row " + (row - 1));
 			}
 		}
+		// row increment is 1 - unless row ended with a count...
+		return Math.max(1, runCount);
 	}
 
 	private static int parseDimension(String token) throws InvalidRLEFormatException {
