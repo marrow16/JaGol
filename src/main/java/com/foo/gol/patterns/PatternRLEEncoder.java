@@ -54,7 +54,7 @@ public class PatternRLEEncoder {
 					runLength = 1;
 					lastOn = isOn;
 					if (column == (columns - 1) && isOn) {
-						rowString += (runLength > 1 ? "" + runLength : "") + (isOn ? "o" : "b");
+						rowString += "o";
 					}
 				} else {
 					runLength++;
