@@ -20,9 +20,7 @@ public class PatternRLEEncoder {
 		if (pattern.length % width != 0) {
 			throw new InvalidRLEFormatException("Cells list must have size consistent with specified width");
 		}
-		// allocate builder to easily enough space...
-		StringBuilder builder = new StringBuilder(20 + pattern.length);
-		builder.append("x=").append(width).append(",y=").append(pattern.length / width).append("\n");
+
 		int rows = pattern.length / width;
 		int columns = width;
 		// look for blank lines...
@@ -39,9 +37,16 @@ public class PatternRLEEncoder {
 				blankLineIndices.add(row);
 			}
 		}
-		String line = "";
+
+		String dimensionsLine = "x=" + columns + ",y=" + rows + "\n";
+		if (blankLineIndices.size() == rows) {
+			return dimensionsLine + "b!";
+		}
+
+		LimitedLineLengthStringBuilder linesBuilder = new LimitedLineLengthStringBuilder(70, rows);
+		StringBuilder rowBuilder;
 		for (int row = 0; row < rows; row++) {
-			String rowString = "";
+			rowBuilder = new StringBuilder(columns + 1);
 			int runLength = 0;
 			Boolean lastOn = null;
 			for (int column = 0; column < columns; column++) {
@@ -50,40 +55,32 @@ public class PatternRLEEncoder {
 					runLength = 1;
 					lastOn = isOn;
 				} else if (isOn != lastOn) {
-					rowString += (runLength > 1 ? "" + runLength : "") + (lastOn ? "o" : "b");
+					rowBuilder.append(runLength > 1 ? "" + runLength : "").append(lastOn ? "o" : "b");
 					runLength = 1;
 					lastOn = isOn;
-					if (column == (columns - 1) && isOn) {
-						rowString += "o";
+					if (isOn && column == (columns - 1)) {
+						// last column and on, so just add it now (otherwise it won't get added at all)
+						rowBuilder.append("o");
 					}
 				} else {
 					runLength++;
 					if (column == (columns - 1) && isOn) {
-						rowString += (runLength > 1 ? "" + runLength : "") + "o";
+						rowBuilder.append(runLength > 1 ? "" + runLength : "").append("o");
 					}
 				}
-			}
-			if (rowString.equals(columns + "b") || rowString.isEmpty()) {
-				rowString = "b";
 			}
 			int blankLinesAfterThisRow = checkBlankLinesAfterRow(row, blankLineIndices);
 			if (blankLinesAfterThisRow > 0) {
 				row += blankLinesAfterThisRow;
 				if (row < rows) {
 					// only add row skip if we haven't skipped to the end
-					rowString += (blankLinesAfterThisRow + 1);
+					rowBuilder.append(blankLinesAfterThisRow + 1);
 				}
 			}
-			rowString += (row == (rows - 1) ? "!" : "$");
-			if ((line.length() + rowString.length()) > 80) {
-				builder.append(line);
-				line = rowString;
-			} else {
-				line += rowString;
-			}
+			rowBuilder.append(row == (rows - 1) ? "!" : "$");
+			linesBuilder.append(rowBuilder.toString());
 		}
-		builder.append(line);
-		return builder.toString();
+		return dimensionsLine + linesBuilder.toString();
 	}
 
 	private static int checkBlankLinesAfterRow(int row, Set<Integer> blankLineIndices) {
@@ -95,4 +92,5 @@ public class PatternRLEEncoder {
 		}
 		return result;
 	}
+
 }
