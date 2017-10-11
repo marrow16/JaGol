@@ -19,27 +19,16 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.text.TextFlow?>
 
 <SplitPane fx:id="mainPane" dividerPositions="0.6319444444444444" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="545.0" prefWidth="722.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.foo.gol.ui.Controller">
 	<items>
 		<ScrollPane fx:id="scrollPane" prefHeight="200.0" prefWidth="200.0">
 			<content>
-				<Canvas fx:id="canvas" height="100.0" onDragDropped="#onCanvasDragDropped" onDragOver="#onCanvasDragOver" onMouseDragged="#onCanvasDragged" onMousePressed="#onCanvasMousePressed" onMouseReleased="#onCanvasMouseReleased" width="100.0" />
+				<Canvas fx:id="canvas" onDragDropped="#onCanvasDragDropped" onDragOver="#onCanvasDragOver" onMouseDragged="#onCanvasDragged" onMousePressed="#onCanvasMousePressed" onMouseReleased="#onCanvasMouseReleased" />
 			</content>
 		</ScrollPane>
 		<VBox prefHeight="398.0" prefWidth="234.0">
 			<children>
-				<TextFlow prefHeight="57.0" prefWidth="236.0">
-					<children>
-						<Label alignment="CENTER" contentDisplay="CENTER" prefHeight="46.0" prefWidth="218.0" text="Game Of Life" textAlignment="CENTER">
-							<font>
-								<Font name="Arial Bold" size="18.0" />
-							</font>
-						</Label>
-					</children>
-				</TextFlow>
 				<BorderPane prefHeight="50.0" prefWidth="216.0">
 					<left>
 						<Button fx:id="playButton" mnemonicParsing="false" onAction="#onPlayButtonClick" text="Play" BorderPane.alignment="CENTER" />
@@ -50,14 +39,15 @@
 					<right>
 						<Button fx:id="stopButton" mnemonicParsing="false" onAction="#onStopButtonClick" text="Stop" BorderPane.alignment="CENTER" />
 					</right>
-					<top>
-						<Separator prefWidth="200.0" BorderPane.alignment="CENTER" />
-					</top>
 					<bottom>
 						<VBox prefHeight="60.0" prefWidth="216.0" BorderPane.alignment="CENTER">
 							<children>
-								<Label text="Animation Speed (ms):" />
-								<Slider fx:id="animationSpeedSlider" blockIncrement="100.0" majorTickUnit="100.0" max="1000.0" min="100.0" minorTickCount="0" prefHeight="66.0" prefWidth="216.0" showTickLabels="true" showTickMarks="true" value="200.0" />
+								<Label text="Animation Speed (ms):">
+									<VBox.margin>
+										<Insets top="4.0" />
+									</VBox.margin>
+								</Label>
+								<Slider fx:id="animationSpeedSlider" blockIncrement="100.0" majorTickUnit="100.0" max="1000.0" min="50.0" minorTickCount="0" prefHeight="66.0" prefWidth="216.0" showTickLabels="true" showTickMarks="true" value="100.0" />
 							</children>
 						</VBox>
 					</bottom>
@@ -70,7 +60,11 @@
 				</BorderPane>
 				<BorderPane prefHeight="90.0" prefWidth="216.0">
 					<top>
-						<Separator prefWidth="200.0" BorderPane.alignment="CENTER" />
+						<Separator prefWidth="200.0" BorderPane.alignment="CENTER">
+							<BorderPane.margin>
+								<Insets bottom="4.0" />
+							</BorderPane.margin>
+						</Separator>
 					</top>
 					<left>
 						<Button fx:id="randomizeButton" mnemonicParsing="false" onAction="#onRandomizeButtonClick" text="Randomize" BorderPane.alignment="CENTER" />
@@ -81,7 +75,11 @@
 					<bottom>
 						<VBox prefHeight="62.0" prefWidth="216.0" BorderPane.alignment="CENTER">
 							<children>
-								<Label text="Random density (%):" />
+								<Label text="Random density (%):">
+									<VBox.margin>
+										<Insets top="4.0" />
+									</VBox.margin>
+								</Label>
 								<Slider fx:id="randomDensitySlider" showTickLabels="true" showTickMarks="true" value="30.0" />
 							</children>
 						</VBox>

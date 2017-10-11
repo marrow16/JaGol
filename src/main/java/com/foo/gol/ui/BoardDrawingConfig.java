@@ -3,9 +3,9 @@ package com.foo.gol.ui;
 import javafx.scene.paint.Color;
 
 public class BoardDrawingConfig {
-	private int columns = 50;
-	private int rows = 50;
-	private int cellSize = 8;
+	private int columns = 60;
+	private int rows = 60;
+	private int cellSize = 6;
 	private int cellSpace = 1;
 	private Color cellActiveColor = Color.DODGERBLUE;
 	private Color cellInactiveColor = Color.WHITE;

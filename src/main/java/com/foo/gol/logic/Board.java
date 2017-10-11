@@ -1,5 +1,7 @@
 package com.foo.gol.logic;
 
+import com.foo.gol.patterns.IPattern;
+
 public class Board implements IBoard {
 	private Cell[][] cells;
 	private int width;
@@ -76,5 +78,21 @@ public class Board implements IBoard {
 	@Override
 	public boolean cellAlive(int row, int column) {
 		return cell(row, column).isAlive();
+	}
+
+	@Override
+	public void drawPattern(int atRow, int atColumn, IPattern pattern) {
+		if (atRow < 0 || atRow >= height || atColumn < 0 || atColumn >= width) {
+			throw new IndexOutOfBoundsException("Row/column is out of bounds");
+		}
+		for (int row = 0; row < pattern.rows(); row++) {
+			if ((row + atRow) < height) {
+				for (int column = 0; column < pattern.columns(); column++) {
+					if ((column + atColumn) < width) {
+						cells[row + atRow][column + atColumn].isAlive(pattern.cell(row, column).isAlive());
+					}
+				}
+			}
+		}
 	}
 }

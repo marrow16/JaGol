@@ -19,7 +19,7 @@ public class Pattern implements IPattern {
 	protected int rows;
 	protected List<ICell> cells;
 
-	Pattern(String name, int columns, int[] pattern) {
+	public Pattern(String name, int columns, int[] pattern) {
 		this.name = name;
 		if (columns < 0) {
 			throw new IllegalArgumentException("Pattern cannot have zero columns");

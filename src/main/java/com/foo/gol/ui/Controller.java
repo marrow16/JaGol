@@ -7,13 +7,15 @@ import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -23,11 +25,15 @@ import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
-public class Controller implements Initializable {
+public class Controller {
+	private static Controller instance = null;
+	public static Controller getInstance() {
+		return instance;
+	}
+
 	private final DataFormat patternDragFormat = new DataFormat("com.foo.gol.ui.pattern");
 
 	private BoardDrawingConfig boardDrawingConfig;
@@ -91,8 +97,16 @@ public class Controller implements Initializable {
 	@FXML
 	private ScrollPane patternsScrollPane;
 
-	@Override
-	public void initialize(URL location, ResourceBundle resources) {
+	@FXML
+	public void initialize() {
+		// store the instance of the controller so that window shown can call .show() method...
+		instance = this;
+
+		mainPane.setDisable(true);
+	}
+
+	public void shown() {
+		mainPane.setDisable(false);
 		fileChooser = new FileChooser();
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Game of Life pattern (*.rle)", "*.rle"));
 		fileChooser.setTitle("Load Pattern");
@@ -118,9 +132,24 @@ public class Controller implements Initializable {
 		drawGridCheckbox.setSelected(boardDrawingConfig.getCellSpace() > 0);
 		gridColorPicker.setValue(boardDrawingConfig.getCellGridColor());
 		updateControls();
-		createBoard(true);
+		createBoard(false);
+		drawBoardMessage();
 		drawBoard();
-		rebuildPatterns();
+		loadPatterns();
+	}
+
+	private void drawBoardMessage() {
+		IPattern[] lines = new IPattern[] {
+				AlphabetPatterns.stringToPattern("Conway's"),
+				AlphabetPatterns.stringToPattern("Game"),
+				AlphabetPatterns.stringToPattern("Of"),
+				AlphabetPatterns.stringToPattern("Life")
+		};
+		int atRow = (boardDrawingConfig.getRows() - ((AlphabetPatterns.CHAR_HEIGHT + 1) * lines.length)) / 2;
+		for (IPattern line: lines) {
+			board.drawPattern(atRow, (boardDrawingConfig.getColumns() - line.columns()) / 2, line);
+			atRow += (AlphabetPatterns.CHAR_HEIGHT + 1);
+		}
 	}
 
 	private void createBoard(boolean randomize) {
@@ -188,7 +217,7 @@ public class Controller implements Initializable {
 		}
 	}
 
-	private void rebuildPatterns() {
+	private void loadPatterns() {
 		selectedPattern = null;
 		draggingPattern = null;
 		patternsContainer.getChildren().clear();
@@ -196,37 +225,23 @@ public class Controller implements Initializable {
 			PatternVBox vbox = pattern.generateDisplay(boardDrawingConfig);
 			patternsContainer.getChildren().add(vbox);
 			makePatternVBoxInteractive(vbox);
-/*
-			vbox.setOnDragDetected(event -> {
-				if (selectedPattern != null && selectedPattern != pattern) {
-					selectedPattern.clearSelectedBorder();
-					selectedPattern = null;
-				}
-				selectedPattern = vbox;
-				selectedPattern.showSelectedBorder();
-				if (!running) {
-					Dragboard db = vbox.startDragAndDrop(TransferMode.MOVE);
-					vbox.prepareForDrag();
-					db.setDragView(vbox.snapshot(null, null));
-					ClipboardContent cc = new ClipboardContent();
-					cc.put(patternDragFormat, pattern.name());
-					db.setContent(cc);
-					draggingPattern = vbox;
-					selectedPattern.showSelectedBorder();
-				}
-			});
-			vbox.setOnDragDone(event -> {
-				draggingPattern = null;
-			});
-			vbox.setOnMouseClicked(event -> {
-				if (selectedPattern != null) {
-					selectedPattern.clearSelectedBorder();
-					selectedPattern = null;
-				}
-				selectedPattern = vbox;
-				vbox.showSelectedBorder();
-			});
-*/
+		}
+	}
+
+	private void rebuildPatterns() {
+		List<IPattern> patterns = new ArrayList<>();
+		for (Node node: patternsContainer.getChildren()) {
+			if (node instanceof PatternVBox) {
+				patterns.add(((PatternVBox)node).getPattern());
+			}
+		}
+		selectedPattern = null;
+		draggingPattern = null;
+		patternsContainer.getChildren().clear();
+		for (IPattern pattern: patterns) {
+			PatternVBox vbox = pattern.generateDisplay(boardDrawingConfig);
+			patternsContainer.getChildren().add(vbox);
+			makePatternVBoxInteractive(vbox);
 		}
 	}
 
