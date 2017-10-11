@@ -6,24 +6,15 @@ public class Board implements IBoard {
 	private int height;
 	private IGenerationController generationController;
 
-	public Board(int width, int height) {
-		this(width, height, null, null);
-	}
-
 	public Board(int width, int height, IGenerationController generationController) {
-		this(width, height, null, generationController);
+		this(width, height, generationController, null);
 	}
 
-	public Board(int width, int height, int[] initialCells) {
-		this(width, height, initialCells, null);
-	}
-
-	public Board(int width, int height, int[] initialCells, IGenerationController generationController) {
+	public Board(int width, int height, IGenerationController generationController, int[] initialCells) {
 		if (generationController == null) {
-			this.generationController = new ChangeOnlyGenerationController();
-		} else {
-			this.generationController = generationController;
+			throw new IllegalArgumentException("Generation controller may not be null");
 		}
+		this.generationController = generationController;
 		if (width <= 0) {
 			throw new IllegalArgumentException("Board cannot have a columns of less than or equal to zero");
 		}

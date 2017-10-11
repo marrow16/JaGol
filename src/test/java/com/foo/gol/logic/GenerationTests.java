@@ -10,65 +10,65 @@ public class GenerationTests extends TestCase {
 	private static boolean DEAD = false;
 
 	public void testStableBlock() {
-		IBoard board = new Board(4, 4, new int[] {
+		IBoard board = new Board(4, 4, new FullScanGenerationController(), new int[] {
 				0,0,0,0,
 				0,1,1,0,
 				0,1,1,0,
 				0,0,0,0
-		}, new FullScanGenerationController());
+		});
 		List<ICell> changed = board.generationController().nextGeneration();
 		assertEquals(0, changed.size());
 		assertEquals(GenerationState.STABLE, board.generationController().state());
 	}
 
 	public void testStableBeehive() {
-		IBoard board = new Board(6, 5, new int[] {
+		IBoard board = new Board(6, 5, new FullScanGenerationController(), new int[] {
 				0,0,0,0,0,0,
 				0,0,1,1,0,0,
 				0,1,0,0,1,0,
 				0,0,1,1,0,0,
 				0,0,0,0,0,0,
-		}, new FullScanGenerationController());
+		});
 		List<ICell> changed = board.generationController().nextGeneration();
 		assertEquals(0, changed.size());
 		assertEquals(GenerationState.STABLE, board.generationController().state());
 	}
 
 	public void testStableBoat() {
-		IBoard board = new Board(5, 5, new int[] {
+		IBoard board = new Board(5, 5, new FullScanGenerationController(), new int[] {
 				0,0,0,0,0,
 				0,1,1,0,0,
 				0,1,0,1,0,
 				0,0,1,0,0,
 				0,0,0,0,0
-		}, new FullScanGenerationController());
+		});
 		List<ICell> changed = board.generationController().nextGeneration();
 		assertEquals(0, changed.size());
 		assertEquals(GenerationState.STABLE, board.generationController().state());
 	}
 
 	public void testStableTub() {
-		IBoard board = new Board(5, 5, new int[] {
+		IBoard board = new Board(5, 5, new FullScanGenerationController(), new int[] {
 				0,0,0,0,0,
 				0,0,1,0,0,
 				0,1,0,1,0,
 				0,0,1,0,0,
 				0,0,0,0,0
-		}, new FullScanGenerationController());
+		});
 		List<ICell> changed = board.generationController().nextGeneration();
 		assertEquals(0, changed.size());
 		assertEquals(GenerationState.STABLE, board.generationController().state());
 	}
 
 	public void testStableLoaf() {
-		IBoard board = new Board(6, 6, new int[] {
+		IBoard board = new Board(6, 6, new FullScanGenerationController(), new int[] {
 				0,0,0,0,0,0,
 				0,0,1,1,0,0,
 				0,1,0,0,1,0,
 				0,0,1,0,1,0,
 				0,0,0,1,0,0,
 				0,0,0,0,0,0
-		}, new FullScanGenerationController());
+		});
 		List<ICell> changed = board.generationController().nextGeneration();
 		assertEquals(0, changed.size());
 		assertEquals(GenerationState.STABLE, board.generationController().state());
@@ -86,7 +86,7 @@ public class GenerationTests extends TestCase {
 		for (int i = 0; i < (5*5); i++) {
 			initialCells[i] = initialStates[i / 5][i % 5] ? 1 : 0;
 		}
-		IBoard board = new Board(5, 5, initialCells, new FullScanGenerationController());
+		IBoard board = new Board(5, 5, new FullScanGenerationController(), initialCells);
 		boolean[][] afterStates = new boolean[][] {
 				new boolean[] {DEAD,DEAD,DEAD,DEAD,DEAD},
 				new boolean[] {DEAD,DEAD,DEAD,DEAD,DEAD},
@@ -130,7 +130,7 @@ public class GenerationTests extends TestCase {
 		for (int i = 0; i < (6*6); i++) {
 			initialCells[i] = initialStates[i / 6][i % 6] ? 1 : 0;
 		}
-		IBoard board = new Board(6, 6, initialCells, new FullScanGenerationController());
+		IBoard board = new Board(6, 6, new FullScanGenerationController(), initialCells);
 		boolean[][] afterStates = new boolean[][] {
 				new boolean[] {DEAD,DEAD,DEAD,DEAD,DEAD,DEAD},
 				new boolean[] {DEAD,DEAD,DEAD,DEAD,DEAD,DEAD},
@@ -175,7 +175,7 @@ public class GenerationTests extends TestCase {
 		for (int i = 0; i < (6*6); i++) {
 			initialCells[i] = initialStates[i / 6][i % 6] ? 1 : 0;
 		}
-		IBoard board = new Board(6, 6, initialCells, new FullScanGenerationController());
+		IBoard board = new Board(6, 6, new FullScanGenerationController(), initialCells);
 		boolean[][] afterStates = new boolean[][] {
 				new boolean[] {DEAD,DEAD,DEAD,DEAD,DEAD,DEAD},
 				new boolean[] {DEAD,LIVE,LIVE,DEAD,DEAD,DEAD},
