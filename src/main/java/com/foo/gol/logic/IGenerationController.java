@@ -14,4 +14,7 @@ public interface IGenerationController {
 	 * @return the cells whose state changed
 	 */
 	List<ICell> nextGeneration();
+
+	IChangeAliveRule getChangeAliveRule();
+	void setChangeAliveRule(IChangeAliveRule changeAliveRule);
 }

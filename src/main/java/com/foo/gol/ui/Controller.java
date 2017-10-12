@@ -153,7 +153,7 @@ public class Controller {
 	}
 
 	private void createBoard(boolean randomize) {
-		generationController = new FullScanGenerationController();
+		generationController = new FullScanGenerationController(new StandardLifeChangeAliveRule());
 		board = new Board(boardDrawingConfig.getColumns(), boardDrawingConfig.getRows(), generationController);
 		if (randomize) {
 			double randomDensity = randomDensitySlider.getValue() / 100d;

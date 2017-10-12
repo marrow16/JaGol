@@ -8,7 +8,7 @@ public class BoardTests extends TestCase {
 	public void testBoardCreateFails() {
 		boolean failed = false;
 		try {
-			IBoard board = new Board(0,1, new FullScanGenerationController());
+			IBoard board = new Board(0,1, new FullScanGenerationController(new StandardLifeChangeAliveRule()));
 		} catch (IllegalArgumentException e) {
 			failed = true;
 		}
@@ -18,7 +18,7 @@ public class BoardTests extends TestCase {
 	public void testBoardCreateFails2() {
 		boolean failed = false;
 		try {
-			IBoard board = new Board(1,0, new FullScanGenerationController());
+			IBoard board = new Board(1,0, new FullScanGenerationController(new StandardLifeChangeAliveRule()));
 		} catch (IllegalArgumentException e) {
 			failed = true;
 		}
@@ -28,7 +28,7 @@ public class BoardTests extends TestCase {
 	public void testBoardCreateFails3() {
 		boolean failed = false;
 		try {
-			IBoard board = new Board(3,3, new FullScanGenerationController(), new int[4]);
+			IBoard board = new Board(3,3, new FullScanGenerationController(new StandardLifeChangeAliveRule()), new int[4]);
 		} catch (IllegalArgumentException e) {
 			failed = true;
 		}
@@ -36,7 +36,7 @@ public class BoardTests extends TestCase {
 	}
 
 	public void testBoardCreateWithActiveCells() {
-		IBoard board = new Board(3,3, new FullScanGenerationController(), new int[] {
+		IBoard board = new Board(3,3, new FullScanGenerationController(new StandardLifeChangeAliveRule()), new int[] {
 				1,1,1,
 				1,1,1,
 				1,1,1
@@ -49,7 +49,7 @@ public class BoardTests extends TestCase {
 	}
 
 	public void testBoardCreationCellAdjacentCounts() {
-		IBoard board = new Board(5,5, new FullScanGenerationController());
+		IBoard board = new Board(5,5, new FullScanGenerationController(new StandardLifeChangeAliveRule()));
 		int[][] expectedAdjacentCounts = new int[][] {
 				new int[] {3, 5, 5, 5, 3},
 				new int[] {5, 8, 8, 8, 5},
