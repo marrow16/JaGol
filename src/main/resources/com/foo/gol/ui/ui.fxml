@@ -23,7 +23,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<SplitPane fx:id="mainPane" dividerPositions="0.6319444444444444" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="545.0" prefWidth="722.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.foo.gol.ui.Controller">
+<SplitPane fx:id="mainPane" dividerPositions="0.75" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="618.0" prefWidth="807.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.foo.gol.ui.Controller">
 	<items>
 		<ScrollPane fx:id="scrollPane" prefHeight="200.0" prefWidth="200.0">
 			<content>
@@ -90,9 +90,10 @@
 										<RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
 										<RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
 										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
-										<RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
 										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
 										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 
 										<RowConstraints vgrow="ALWAYS" />
@@ -142,12 +143,12 @@
 												<Insets left="4.0" right="4.0" />
 											</GridPane.margin>
 										</Separator>
-										<Label prefHeight="17.0" text="Generation rule" GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.rowIndex="10">
+										<Label prefHeight="17.0" text="Generation rule" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="10">
 											<GridPane.margin>
 												<Insets left="4.0" />
 											</GridPane.margin>
 										</Label>
-										<ComboBox fx:id="ruleCombo" onAction="#onRuleComboChanged" prefHeight="25.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="11">
+										<ComboBox fx:id="ruleCombo" onAction="#onRuleComboChanged" prefHeight="25.0" GridPane.columnIndex="1" GridPane.rowIndex="10">
 											<items>
 												<FXCollections fx:factory="observableArrayList">
 													<String fx:value="Standard" />
@@ -159,21 +160,43 @@
 												<String fx:value="Standard" />
 											</value>
 											<GridPane.margin>
-												<Insets left="4.0" right="4" />
+												<Insets right="4" />
 											</GridPane.margin>
 										</ComboBox>
-										<Label prefHeight="17.0" text="Alives survive with:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="12" />
-										<Label prefHeight="17.0" text="Deads born with:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="13" />
-										<TextField fx:id="alivesSurviveTextField" disable="true" onKeyTyped="#onRuleTextFieldKeyTyped" text="2,3" GridPane.columnIndex="1" GridPane.rowIndex="12">
+										<Label prefHeight="17.0" text="Alives survive with:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="11" />
+										<Label prefHeight="17.0" text="Deads born with:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="12" />
+										<TextField fx:id="alivesSurviveTextField" disable="true" onKeyTyped="#onRuleTextFieldKeyTyped" text="2,3" GridPane.columnIndex="1" GridPane.rowIndex="11">
 											<GridPane.margin>
 												<Insets right="4" />
 											</GridPane.margin>
 										</TextField>
-										<TextField fx:id="deadsBornTextField" disable="true" onKeyTyped="#onRuleTextFieldKeyTyped" text="3" GridPane.columnIndex="1" GridPane.rowIndex="13">
+										<TextField fx:id="deadsBornTextField" disable="true" onKeyTyped="#onRuleTextFieldKeyTyped" text="3" GridPane.columnIndex="1" GridPane.rowIndex="12">
 											<GridPane.margin>
 												<Insets right="4" />
 											</GridPane.margin>
 										</TextField>
+										<Separator prefWidth="200.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="13">
+											<GridPane.margin>
+												<Insets left="4.0" right="4.0" />
+											</GridPane.margin>
+										</Separator>
+										<Label prefHeight="17.0" text="Wrapping:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="14" />
+										<ComboBox fx:id="wrappingCombo" onAction="#onWrappingChanged" prefHeight="25.0" GridPane.columnIndex="1" GridPane.rowIndex="14">
+											<items>
+												<FXCollections fx:factory="observableArrayList">
+													<String fx:value="None" />
+													<String fx:value="Horizontal" />
+													<String fx:value="Vertical" />
+												</FXCollections>
+											</items>
+											<value>
+												<String fx:value="None" />
+											</value>
+											<GridPane.margin>
+												<Insets right="4" />
+											</GridPane.margin>
+										</ComboBox>
+
 									</children>
 									<padding>
 										<Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />

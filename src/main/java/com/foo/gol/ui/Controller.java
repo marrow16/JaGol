@@ -104,6 +104,8 @@ public class Controller {
 	@FXML
 	private ComboBox<String> ruleCombo;
 	@FXML
+	private ComboBox<String> wrappingCombo;
+	@FXML
 	private GridPane lifeControlsGrid;
 	@FXML
 	private GridPane boardDrawingControlsGrid;
@@ -195,7 +197,7 @@ public class Controller {
 
 	private void createBoard(boolean randomize) {
 		generationController = new FullScanGenerationController(new StandardLifeChangeAliveRule());
-		board = new Board(boardDrawingConfig.getColumns(), boardDrawingConfig.getRows(), generationController);
+		board = new Board(boardDrawingConfig.getColumns(), boardDrawingConfig.getRows(), boardDrawingConfig.getWrappingMode(), generationController);
 		if (randomize) {
 			double randomDensity = randomDensitySlider.getValue() / 100d;
 			for (int row = 0; row < boardDrawingConfig.getRows(); row++) {
@@ -863,4 +865,13 @@ public class Controller {
 		canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
 	}
 
+	public void onWrappingChanged(ActionEvent actionEvent) {
+		if (!running) {
+			BoardWrappingMode wrappingMode = BoardWrappingMode.fromString(wrappingCombo.getValue());
+			if (wrappingMode != null && boardDrawingConfig.getWrappingMode() != wrappingMode) {
+				boardDrawingConfig.setWrappingMode(wrappingMode);
+				resizeBoard();
+			}
+		}
+	}
 }

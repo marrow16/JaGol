@@ -12,4 +12,6 @@ public interface ICell {
 	int column();
 
 	ICell clone(boolean newAliveState);
+
+	void addAdjacentCell(ICell adjacent);
 }

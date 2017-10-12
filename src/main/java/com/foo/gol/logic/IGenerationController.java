@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface IGenerationController {
 	void startInitialisation();
-	void addControlledCell(Cell cell);
+	void addControlledCell(ICell cell);
 	void endInitialisation();
 
 	GenerationState state();

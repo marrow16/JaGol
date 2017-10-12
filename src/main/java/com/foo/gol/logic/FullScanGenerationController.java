@@ -3,7 +3,7 @@ package com.foo.gol.logic;
 import java.util.*;
 
 public class FullScanGenerationController implements IGenerationController {
-	private List<Cell> cells;;
+	private List<ICell> cells;;
 	private GenerationState state;
 	private IChangeAliveRule changeAliveRule;
 
@@ -22,7 +22,7 @@ public class FullScanGenerationController implements IGenerationController {
 	}
 
 	@Override
-	public void addControlledCell(Cell cell) {
+	public void addControlledCell(ICell cell) {
 		if (!GenerationState.INITIALISING.equals(state)) {
 			throw new IllegalStateException("Cannot add cells to controller when controller is not initialising");
 		}

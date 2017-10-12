@@ -58,11 +58,12 @@ public class Cell implements ICell {
 		return new Cell(row, column, newAliveState);
 	}
 
-	private void addAdjacentCell(Cell adjacent) {
+	@Override
+	public void addAdjacentCell(ICell adjacent) {
 		adjacents.add(adjacent);
 	}
 
-	public static void makeTwoCellsAdjacent(Cell firstCell, Cell secondCell) {
+	public static void makeTwoCellsAdjacent(ICell firstCell, ICell secondCell) {
 		firstCell.addAdjacentCell(secondCell);
 		secondCell.addAdjacentCell(firstCell);
 	}

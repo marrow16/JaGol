@@ -1,10 +1,12 @@
 package com.foo.gol.ui;
 
+import com.foo.gol.logic.BoardWrappingMode;
 import javafx.scene.paint.Color;
 
 public class BoardDrawingConfig {
 	private int columns = 60;
 	private int rows = 60;
+	private BoardWrappingMode wrappingMode = BoardWrappingMode.NONE;
 	private int cellSize = 6;
 	private int cellSpace = 1;
 	private Color cellActiveColor = Color.DODGERBLUE;
@@ -58,5 +60,12 @@ public class BoardDrawingConfig {
 	}
 	public void setCellGridColor(Color cellGridColor) {
 		this.cellGridColor = cellGridColor;
+	}
+
+	public BoardWrappingMode getWrappingMode() {
+		return wrappingMode;
+	}
+	public void setWrappingMode(BoardWrappingMode wrappingMode) {
+		this.wrappingMode = wrappingMode;
 	}
 }
