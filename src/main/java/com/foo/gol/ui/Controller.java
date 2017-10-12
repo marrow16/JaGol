@@ -322,6 +322,18 @@ public class Controller {
 			}
 			selectedPattern = patternVBox;
 			patternVBox.showSelectedBorder();
+			if (!running && event.getClickCount() == 2) {
+				int row = currentCellPosition.getRow();
+				int column = currentCellPosition.getColumn();
+				for (int r = 0; r < pattern.rows() && (row + r) < boardDrawingConfig.getRows(); r++) {
+					for (int c = 0; c < pattern.columns() && (column + c) < boardDrawingConfig.getColumns(); c++) {
+						ICell cell = board.cell(row + r, column + c);
+						cell.isAlive(pattern.cell(r, c).isAlive());
+						drawCell(cell);
+					}
+				}
+				canvas.requestFocus();
+			}
 		});
 	}
 
@@ -440,8 +452,6 @@ public class Controller {
 			int row = position.getRow();
 			int column = position.getColumn();
 			IPattern pattern = draggingPattern.getPattern();
-			Color activeColor = boardDrawingConfig.getCellActiveColor();
-			Color inactiveColor = boardDrawingConfig.getCellInactiveColor();
 			for (int r = 0; r < pattern.rows() && (row + r) < boardDrawingConfig.getRows(); r++) {
 				for (int c = 0; c < pattern.columns() && (column + c) < boardDrawingConfig.getColumns(); c++) {
 					ICell cell = board.cell(row + r, column + c);
