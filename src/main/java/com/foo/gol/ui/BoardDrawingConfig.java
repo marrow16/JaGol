@@ -9,7 +9,7 @@ public class BoardDrawingConfig {
 	private int cellSpace = 1;
 	private Color cellActiveColor = Color.DODGERBLUE;
 	private Color cellInactiveColor = Color.WHITE;
-	private Color cellGridColor = Color.SLATEGRAY;
+	private Color cellGridColor = Color.LIGHTGRAY;
 
 	public int getColumns() {
 		return columns;

@@ -1094,4 +1094,11 @@ public class AlphabetPatterns {
 		}
 		return new Pattern(str, totalWidth, bitPattern);
 	}
+
+	public static IPattern patternForChar(char ch) {
+		if (ch >= 32 && (ch - 32) < ASCII_PATTERNS.length) {
+			return ASCII_PATTERNS[ch - 32];
+		}
+		return null;
+	}
 }

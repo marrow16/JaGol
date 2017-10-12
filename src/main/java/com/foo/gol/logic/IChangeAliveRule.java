@@ -1,6 +1,5 @@
 package com.foo.gol.logic;
 
-@FunctionalInterface
 public interface IChangeAliveRule {
 	/**
 	 * Evaluates whether the state of a cell (alive/dead) should changed
@@ -9,6 +8,9 @@ public interface IChangeAliveRule {
 	 * @return whether the state of the cell changes
 	 */
 	boolean evaluate(ICell cell);
+
+	String getAlivesSurviveString();
+	String getDeadsBornString();
 
 	public static int countAdjacentsAlive(ICell cell) {
 		int result = 0;

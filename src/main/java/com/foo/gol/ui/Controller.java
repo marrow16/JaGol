@@ -14,8 +14,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -53,6 +52,12 @@ public class Controller {
 	private CanvasDrawingMode canvasDrawingMode = CanvasDrawingMode.NONE;
 	private GridPosition canvasStartPosition = null;
 	private GridRectangle canvasMarkedRectangle = null;
+
+	private GridPosition currentCellPosition = new GridPosition(0, 0);
+	private boolean currentCellBlinkOn = false;
+	private Timeline focusCellBlinker = null;
+
+	private volatile GraphicsContext canvasGraphicsContext;
 
 	@FXML
 	private SplitPane mainPane;
@@ -96,6 +101,18 @@ public class Controller {
 	private TitledPane accordionPatterns;
 	@FXML
 	private ScrollPane patternsScrollPane;
+	@FXML
+	private ComboBox<String> ruleCombo;
+	@FXML
+	private GridPane lifeControlsGrid;
+	@FXML
+	private GridPane boardDrawingControlsGrid;
+	@FXML
+	private GridPane loadSaveControlsGrid;
+	@FXML
+	private TextField alivesSurviveTextField;
+	@FXML
+	private TextField deadsBornTextField;
 
 	@FXML
 	public void initialize() {
@@ -107,6 +124,7 @@ public class Controller {
 
 	public void shown() {
 		mainPane.setDisable(false);
+		canvasGraphicsContext = canvas.getGraphicsContext2D();
 		fileChooser = new FileChooser();
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Game of Life pattern (*.rle)", "*.rle"));
 		fileChooser.setTitle("Load Pattern");
@@ -131,6 +149,29 @@ public class Controller {
 		inActiveCellColorPicker.setValue(boardDrawingConfig.getCellInactiveColor());
 		drawGridCheckbox.setSelected(boardDrawingConfig.getCellSpace() > 0);
 		gridColorPicker.setValue(boardDrawingConfig.getCellGridColor());
+
+		alivesSurviveTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+			onAlivesSurviveTextFieldChanged();
+		});
+		deadsBornTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+			onDeadsBornTextFieldChanged();
+		});
+
+		focusCellBlinker = new Timeline(new KeyFrame(Duration.millis(500), e -> {
+			focusCellBlink();
+		}));
+		focusCellBlinker.setCycleCount(-1);
+
+		canvas.focusedProperty().addListener((observable, oldValue, newValue) -> {
+			if (newValue) {
+				currentCellBlinkOn = true;
+				drawBlinkCell();
+				focusCellBlinker.play();
+			} else {
+				focusCellBlinker.stop();
+				clearBlinkCell();
+			}
+		});
 		updateControls();
 		createBoard(false);
 		drawBoardMessage();
@@ -168,6 +209,9 @@ public class Controller {
 	private void resizeBoard() {
 		int newWidth = (Integer)boardWidthSpinner.getValue();
 		int newHeight = (Integer)boardHeightSpinner.getValue();
+		if (currentCellPosition.getRow() >= newHeight || currentCellPosition.getColumn() >= newWidth) {
+			currentCellPosition = new GridPosition(Math.min(currentCellPosition.getRow(), newHeight - 1), Math.min(currentCellPosition.getColumn(), newWidth - 1));
+		}
 		int oldWidth = boardDrawingConfig.getColumns();
 		int oldHeight = boardDrawingConfig.getRows();
 		boardDrawingConfig.setRows(newHeight);
@@ -183,35 +227,36 @@ public class Controller {
 	}
 
 	private void drawBoard() {
-		int rows = boardDrawingConfig.getRows();
-		int columns = boardDrawingConfig.getColumns();
-		int cellSize = boardDrawingConfig.getCellSize();
-		int cellSpace = boardDrawingConfig.getCellSpace();
-		int cellSpacing = cellSize + cellSpace;
-		int canvasWidth = 2 + (columns * cellSize) + ((columns - 1) * cellSpace);
-		int canvasHeight = 2 + (rows * cellSize) + ((rows - 1) * cellSpace);
-		canvas.setWidth(canvasWidth);
-		canvas.setHeight(canvasHeight);
-		GraphicsContext gc = canvas.getGraphicsContext2D();
-		gc.setFill(boardDrawingConfig.getCellInactiveColor());
-		gc.fillRect(0,0, canvasWidth, canvasHeight);
-		gc.setStroke(Color.BLACK);
-		gc.setLineWidth(1);
-		gc.strokeRect(0,0, canvasWidth, canvasHeight);
-		if (cellSpace > 0) {
-			gc.setStroke(boardDrawingConfig.getCellGridColor());
-			for (int r = 1; r < rows; r++) {
-				gc.strokeLine(1.5d, (r * cellSpacing) + 0.5d, canvasWidth - 1.5d, (r * cellSpacing) + 0.5d);
+		synchronized (canvasGraphicsContext) {
+			int rows = boardDrawingConfig.getRows();
+			int columns = boardDrawingConfig.getColumns();
+			int cellSize = boardDrawingConfig.getCellSize();
+			int cellSpace = boardDrawingConfig.getCellSpace();
+			int cellSpacing = cellSize + cellSpace;
+			int canvasWidth = 2 + (columns * cellSize) + ((columns - 1) * cellSpace);
+			int canvasHeight = 2 + (rows * cellSize) + ((rows - 1) * cellSpace);
+			canvas.setWidth(canvasWidth);
+			canvas.setHeight(canvasHeight);
+			canvasGraphicsContext.setFill(boardDrawingConfig.getCellInactiveColor());
+			canvasGraphicsContext.fillRect(0, 0, canvasWidth, canvasHeight);
+			canvasGraphicsContext.setStroke(Color.BLACK);
+			canvasGraphicsContext.setLineWidth(1);
+			canvasGraphicsContext.strokeRect(0, 0, canvasWidth, canvasHeight);
+			if (cellSpace > 0) {
+				canvasGraphicsContext.setStroke(boardDrawingConfig.getCellGridColor());
+				for (int r = 1; r < rows; r++) {
+					canvasGraphicsContext.strokeLine(1.5d, (r * cellSpacing) + 0.5d, canvasWidth - 1.5d, (r * cellSpacing) + 0.5d);
+				}
+				for (int c = 1; c < columns; c++) {
+					canvasGraphicsContext.strokeLine((c * cellSpacing) + 0.5d, 1.5d, (c * cellSpacing) + 0.5d, canvasHeight - 1.5d);
+				}
 			}
-			for (int c = 1; c < columns; c++) {
-				gc.strokeLine((c * cellSpacing) + 0.5d, 1.5d, (c * cellSpacing) + 0.5d, canvasHeight - 1.5d);
-			}
-		}
-		gc.setFill(boardDrawingConfig.getCellActiveColor());
-		for (int row = 0; row < rows; row++) {
-			for (int column = 0; column < columns; column++) {
-				if (board.cellAlive(row, column)) {
-					gc.fillRect((column * cellSpacing) + 1, (row * cellSpacing) + 1, cellSize, cellSize);
+			canvasGraphicsContext.setFill(boardDrawingConfig.getCellActiveColor());
+			for (int row = 0; row < rows; row++) {
+				for (int column = 0; column < columns; column++) {
+					if (board.cellAlive(row, column)) {
+						canvasGraphicsContext.fillRect((column * cellSpacing) + 1, (row * cellSpacing) + 1, cellSize, cellSize);
+					}
 				}
 			}
 		}
@@ -281,6 +326,7 @@ public class Controller {
 	private void run() {
 		running = true;
 		updateControls();
+		clearBlinkCell();
 		animationLoop = new Timeline(new KeyFrame(Duration.millis(animationSpeedSlider.getValue()), e -> {
 			generation();
 		}));
@@ -296,14 +342,13 @@ public class Controller {
 
 	private void generation() {
 		List<ICell> changes = generationController.nextGeneration();
-		GraphicsContext gc = canvas.getGraphicsContext2D();
 		Color activeColor = boardDrawingConfig.getCellActiveColor();
 		Color inactiveColor = boardDrawingConfig.getCellInactiveColor();
 		int cellSize = boardDrawingConfig.getCellSize();
 		int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
 		for (ICell cell: changes) {
-			gc.setFill(cell.isAlive() ? activeColor : inactiveColor);
-			gc.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
+			canvasGraphicsContext.setFill(cell.isAlive() ? activeColor : inactiveColor);
+			canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
 		}
 		if (changes.size() == 0 && running) {
 			stop();
@@ -314,17 +359,11 @@ public class Controller {
 		playButton.setDisable(running);
 		stepButton.setDisable(running);
 		stopButton.setDisable(!running);
-		animationSpeedSlider.setDisable(running);
 		randomizeButton.setDisable(running);
 		clearButton.setDisable(running);
-		randomDensitySlider.setDisable(running);
-		boardWidthSpinner.setDisable(running);
-		boardHeightSpinner.setDisable(running);
-		cellSizeSpinner.setDisable(running);
-		activeCellColorPicker.setDisable(running);
-		inActiveCellColorPicker.setDisable(running);
-		drawGridCheckbox.setDisable(running);
-		gridColorPicker.setDisable(running);
+		lifeControlsGrid.setDisable(running);
+		boardDrawingControlsGrid.setDisable(running);
+		loadSaveControlsGrid.setDisable(running);
 	}
 
 	@FXML
@@ -399,28 +438,25 @@ public class Controller {
 			int row = position.getRow();
 			int column = position.getColumn();
 			IPattern pattern = draggingPattern.getPattern();
-			GraphicsContext gc = canvas.getGraphicsContext2D();
 			Color activeColor = boardDrawingConfig.getCellActiveColor();
 			Color inactiveColor = boardDrawingConfig.getCellInactiveColor();
 			for (int r = 0; r < pattern.rows() && (row + r) < boardDrawingConfig.getRows(); r++) {
 				for (int c = 0; c < pattern.columns() && (column + c) < boardDrawingConfig.getColumns(); c++) {
 					ICell cell = board.cell(row + r, column + c);
 					cell.isAlive(pattern.cell(r, c).isAlive());
-					drawCell(cell, gc);
+					drawCell(cell);
 				}
 			}
 		}
 	}
 
 	private void drawCell(ICell cell) {
-		drawCell(cell, canvas.getGraphicsContext2D());
-	}
-
-	private void drawCell(ICell cell, GraphicsContext gc) {
-		gc.setFill(cell.isAlive() ? boardDrawingConfig.getCellActiveColor() : boardDrawingConfig.getCellInactiveColor());
-		int cellSize = boardDrawingConfig.getCellSize();
-		int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
-		gc.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
+		synchronized (canvasGraphicsContext) {
+			canvasGraphicsContext.setFill(cell.isAlive() ? boardDrawingConfig.getCellActiveColor() : boardDrawingConfig.getCellInactiveColor());
+			int cellSize = boardDrawingConfig.getCellSize();
+			int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
+			canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
+		}
 	}
 
 	@FXML
@@ -492,6 +528,11 @@ public class Controller {
 
 	@FXML
 	public void onCanvasMousePressed(MouseEvent mouseEvent) {
+		mouseEvent.consume();
+		if (!canvas.isFocused()) {
+			canvas.requestFocus();
+		}
+		changeCurrentCellPosition(GridPosition.fromXYCoordinate(boardDrawingConfig, mouseEvent.getX(), mouseEvent.getY()));
 		if (!running) {
 			canvasMarkedRectangle = null;
 			if (mouseEvent.isPrimaryButtonDown() && (mouseEvent.isControlDown() || mouseEvent.isMetaDown())) {
@@ -593,10 +634,9 @@ public class Controller {
 
 	private void clearCanvasMarking() {
 		if (canvasMarkedRectangle != null) {
-			GraphicsContext gc = canvas.getGraphicsContext2D();
 			for (int row = canvasMarkedRectangle.getStartRow(); row <= canvasMarkedRectangle.getEndRow(); row++) {
 				for (int column = canvasMarkedRectangle.getStartColumn(); column <= canvasMarkedRectangle.getEndColumn(); column++) {
-					drawCell(board.cell(row, column), gc);
+					drawCell(board.cell(row, column));
 				}
 			}
 			canvasMarkedRectangle = null;
@@ -608,13 +648,219 @@ public class Controller {
 		Color restoreInactiveColor = boardDrawingConfig.getCellInactiveColor();
 		boardDrawingConfig.setCellActiveColor(Color.RED);
 		boardDrawingConfig.setCellInactiveColor(Color.YELLOW);
-		GraphicsContext gc = canvas.getGraphicsContext2D();
 		for (int row = canvasMarkedRectangle.getStartRow(); row <= canvasMarkedRectangle.getEndRow(); row++) {
 			for (int column = canvasMarkedRectangle.getStartColumn(); column <= canvasMarkedRectangle.getEndColumn(); column++) {
-				drawCell(board.cell(row, column), gc);
+				drawCell(board.cell(row, column));
 			}
 		}
 		boardDrawingConfig.setCellActiveColor(restoreActiveColor);
 		boardDrawingConfig.setCellInactiveColor(restoreInactiveColor);
 	}
+
+	public void onRuleComboChanged(ActionEvent actionEvent) {
+		if (!running) {
+			switch (ruleCombo.getValue()) {
+				case "HiLife":
+					generationController.setChangeAliveRule(new HiLifeChangeAliveRule());
+					alivesSurviveTextField.setDisable(true);
+					deadsBornTextField.setDisable(true);
+					alivesSurviveTextField.textProperty().setValue(generationController.getChangeAliveRule().getAlivesSurviveString());
+					deadsBornTextField.textProperty().setValue(generationController.getChangeAliveRule().getDeadsBornString());
+					break;
+				case "Custom":
+					alivesSurviveTextField.setDisable(false);
+					deadsBornTextField.setDisable(false);
+					generationController.setChangeAliveRule(new CustomChangeAliveRule(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
+					break;
+				default:
+					// Standard
+					generationController.setChangeAliveRule(new StandardLifeChangeAliveRule());
+					alivesSurviveTextField.setDisable(true);
+					deadsBornTextField.setDisable(true);
+					alivesSurviveTextField.textProperty().setValue(generationController.getChangeAliveRule().getAlivesSurviveString());
+					deadsBornTextField.textProperty().setValue(generationController.getChangeAliveRule().getDeadsBornString());
+					break;
+			}
+		}
+	}
+
+	public void onAlivesSurviveTextFieldChanged() {
+		if (!running && "Custom".equals(ruleCombo.getValue()) && !alivesSurviveTextField.isDisabled()) {
+			generationController.setChangeAliveRule(new CustomChangeAliveRule(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
+		}
+	}
+
+	public void onDeadsBornTextFieldChanged() {
+		if (!running && "Custom".equals(ruleCombo.getValue()) && !deadsBornTextField.isDisabled()) {
+			generationController.setChangeAliveRule(new CustomChangeAliveRule(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
+		}
+	}
+
+	public void onRuleTextFieldKeyTyped(KeyEvent keyEvent) {
+		String typedChar = keyEvent.getCharacter();
+		if (!"0123456789 ,".contains(typedChar)) {
+			keyEvent.consume();
+		}
+	}
+
+	public void onCanvasKeyPressed(KeyEvent keyEvent) {
+		if (!running) {
+			ICell cell;
+			switch (keyEvent.getCode()) {
+				case UP:
+					if (keyEvent.isControlDown()) {
+						cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+						cell.isAlive(!keyEvent.isAltDown() || !cell.isAlive());
+						drawCell(cell);
+					}
+					changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1, currentCellPosition.getColumn()));
+					break;
+				case DOWN:
+					if (keyEvent.isControlDown()) {
+						cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+						cell.isAlive(!keyEvent.isAltDown() || !cell.isAlive());
+						drawCell(cell);
+					}
+					changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow() == (boardDrawingConfig.getRows() - 1) ? 0 : currentCellPosition.getRow() + 1, currentCellPosition.getColumn()));
+					break;
+				case LEFT:
+					if (keyEvent.isControlDown()) {
+						cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+						cell.isAlive(!keyEvent.isAltDown() || !cell.isAlive());
+						drawCell(cell);
+					}
+					changeCurrentCellPosition(new GridPosition(
+							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
+							currentCellPosition.getColumn() == 0 ? boardDrawingConfig.getColumns() - 1 : currentCellPosition.getColumn() - 1));
+					break;
+				case RIGHT:
+					if (keyEvent.isControlDown()) {
+						cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+						cell.isAlive(!keyEvent.isAltDown() || !cell.isAlive());
+						drawCell(cell);
+					}
+					changeCurrentCellPosition(new GridPosition(
+							currentCellPosition.getColumn() == boardDrawingConfig.getColumns() - 1 ? (currentCellPosition.getRow() == boardDrawingConfig.getRows() - 1 ? 0 : currentCellPosition.getRow() + 1) : currentCellPosition.getRow(),
+							currentCellPosition.getColumn() == (boardDrawingConfig.getColumns() - 1) ? 0 : currentCellPosition.getColumn() + 1));
+					break;
+				case HOME:
+					if (keyEvent.isControlDown()) {
+						changeCurrentCellPosition(new GridPosition(0,0));
+					} else {
+						changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow(), 0));
+					}
+					break;
+				case END:
+					if (keyEvent.isControlDown()) {
+						changeCurrentCellPosition(new GridPosition(boardDrawingConfig.getRows() - 1,boardDrawingConfig.getColumns() - 1));
+					} else {
+						changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow(), boardDrawingConfig.getColumns() - 1));
+					}
+					break;
+				case PAGE_UP:
+					changeCurrentCellPosition(new GridPosition(0, currentCellPosition.getColumn()));
+					break;
+				case PAGE_DOWN:
+					changeCurrentCellPosition(new GridPosition(boardDrawingConfig.getRows() - 1, currentCellPosition.getColumn()));
+					break;
+				case SPACE:
+					cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+					cell.isAlive(!keyEvent.isControlDown());
+					drawCell(cell);
+					changeCurrentCellPosition(new GridPosition(
+							currentCellPosition.getColumn() == boardDrawingConfig.getColumns() - 1 ? (currentCellPosition.getRow() == boardDrawingConfig.getRows() - 1 ? 0 : currentCellPosition.getRow() + 1) : currentCellPosition.getRow(),
+							currentCellPosition.getColumn() == (boardDrawingConfig.getColumns() - 1) ? 0 : currentCellPosition.getColumn() + 1));
+					break;
+				case DELETE:
+					cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+					cell.isAlive(false);
+					drawCell(cell);
+					break;
+				case BACK_SPACE:
+					cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+					cell.isAlive(keyEvent.isControlDown());
+					drawCell(cell);
+					changeCurrentCellPosition(new GridPosition(
+							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
+							currentCellPosition.getColumn() == 0 ? boardDrawingConfig.getColumns() - 1 : currentCellPosition.getColumn() - 1));
+					break;
+			}
+		}
+	}
+
+	public void onCanvasKeyTyped(KeyEvent keyEvent) {
+		if (!running) {
+			String typedChar = keyEvent.getCharacter();
+			int codePoint = typedChar.length() > 0 ? typedChar.codePointAt(0) : 0;
+			if (codePoint > 32 && codePoint < 127) {
+				IPattern characterPattern = AlphabetPatterns.patternForChar(typedChar.charAt(0));
+				if (characterPattern != null) {
+					synchronized (characterPattern) {
+						int top = Math.max(0, currentCellPosition.getRow() - (characterPattern.rows() - 2));
+						board.drawPattern(top, currentCellPosition.getColumn(), characterPattern);
+						redrawBoardArea(top, currentCellPosition.getColumn(), characterPattern.rows(), characterPattern.columns());
+						changeCurrentCellPosition(new GridPosition(top + (characterPattern.rows() - 2), Math.min(boardDrawingConfig.getColumns() - 1, currentCellPosition.getColumn() + characterPattern.columns() + 1)));
+					}
+				}
+			}
+		}
+	}
+
+	private void redrawBoardArea(int top, int left, int height, int width) {
+		synchronized (canvasGraphicsContext) {
+			for (int row = 0; row < height; row++) {
+				if ((row + top) < boardDrawingConfig.getRows()) {
+					for (int column = 0; column < width; column++) {
+						if ((column + left) < boardDrawingConfig.getColumns()) {
+							drawCell(board.cell(row + top, column + left));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void focusCellBlink() {
+		if (!running) {
+			synchronized (canvasGraphicsContext) {
+				currentCellBlinkOn = !currentCellBlinkOn;
+				ICell cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+				if (currentCellBlinkOn) {
+					canvasGraphicsContext.setFill((cell.isAlive() ? boardDrawingConfig.getCellActiveColor() : boardDrawingConfig.getCellInactiveColor()).invert());
+					int cellSize = boardDrawingConfig.getCellSize();
+					int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
+					canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
+				} else {
+					drawCell(cell);
+				}
+			}
+		}
+	}
+
+	private void changeCurrentCellPosition(GridPosition newPosition) {
+		if (!newPosition.equals(currentCellPosition)) {
+			synchronized (canvasGraphicsContext) {
+				clearBlinkCell();
+				currentCellPosition = newPosition;
+				currentCellBlinkOn = true;
+				if (!running) {
+					drawBlinkCell();
+				}
+			}
+		}
+	}
+
+	private void clearBlinkCell() {
+		ICell cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+		drawCell(cell);
+	}
+
+	private void drawBlinkCell() {
+		ICell cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
+		canvasGraphicsContext.setFill((cell.isAlive() ? boardDrawingConfig.getCellActiveColor() : boardDrawingConfig.getCellInactiveColor()).invert());
+		int cellSize = boardDrawingConfig.getCellSize();
+		int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
+		canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
+	}
+
 }
