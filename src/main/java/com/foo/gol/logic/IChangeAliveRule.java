@@ -2,6 +2,12 @@ package com.foo.gol.logic;
 
 @FunctionalInterface
 public interface IChangeAliveRule {
+	/**
+	 * Evaluates whether the state of a cell (alive/dead) should changed
+	 *
+	 * @param cell the cell to be evaluated
+	 * @return whether the state of the cell changes
+	 */
 	boolean evaluate(ICell cell);
 
 	public static int countAdjacentsAlive(ICell cell) {
