@@ -48,6 +48,24 @@
 					<padding>
 						<Insets bottom="4.0" left="8.0" right="8.0" />
 					</padding>
+					<bottom>
+						<GridPane>
+							<columnConstraints>
+								<ColumnConstraints hgrow="SOMETIMES" minWidth="116.0" prefWidth="116.0" />
+								<ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+							</columnConstraints>
+							<rowConstraints>
+								<RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+							</rowConstraints>
+							<children>
+								<CheckBox fx:id="saveAnimationCheckbox" mnemonicParsing="false" onAction="#onSaveAnimationCheckboxChanged" text="Save animation" />
+								<TextField fx:id="saveAnimationToTextField" disable="true" prefHeight="25.0" prefWidth="116.0" visible="false" GridPane.columnIndex="1" />
+							</children>
+							<BorderPane.margin>
+								<Insets top="6.0" />
+							</BorderPane.margin>
+						</GridPane>
+					</bottom>
 				</BorderPane>
 				<BorderPane prefHeight="44.0" prefWidth="262.0">
 					<top>

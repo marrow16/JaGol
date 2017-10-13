@@ -59,6 +59,8 @@ public class Controller {
 
 	private volatile GraphicsContext canvasGraphicsContext;
 
+	private AnimationSaver animationSaver;
+
 	@FXML
 	private SplitPane mainPane;
 	@FXML
@@ -115,6 +117,10 @@ public class Controller {
 	private TextField alivesSurviveTextField;
 	@FXML
 	private TextField deadsBornTextField;
+	@FXML
+	private CheckBox saveAnimationCheckbox;
+	@FXML
+	private TextField saveAnimationToTextField;
 
 	@FXML
 	public void initialize() {
@@ -127,6 +133,10 @@ public class Controller {
 	public void shown() {
 		mainPane.setDisable(false);
 		canvasGraphicsContext = canvas.getGraphicsContext2D();
+		animationSaver = new AnimationSaver(mainPane.getScene().getWindow(), canvas, (int)animationSpeedSlider.getValue());
+		animationSpeedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+			animationSaver.setFrameInterval((int)newValue);
+		});
 		fileChooser = new FileChooser();
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Game of Life pattern (*.rle)", "*.rle"));
 		fileChooser.setTitle("Load Pattern");
@@ -332,6 +342,7 @@ public class Controller {
 						drawCell(cell);
 					}
 				}
+				animationSaver.step();
 				canvas.requestFocus();
 			}
 		});
@@ -364,6 +375,7 @@ public class Controller {
 			canvasGraphicsContext.setFill(cell.isAlive() ? activeColor : inactiveColor);
 			canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
 		}
+		animationSaver.step();
 		if (changes.size() == 0 && running) {
 			stop();
 		}
@@ -399,18 +411,21 @@ public class Controller {
 	public void onRandomizeButtonClick(ActionEvent actionEvent) {
 		createBoard(true);
 		drawBoard();
+		animationSaver.step();
 	}
 
 	@FXML
 	public void onClearButtonClick(ActionEvent actionEvent) {
 		createBoard(false);
 		drawBoard();
+		animationSaver.step();
 	}
 
 	@FXML
 	public void onActiveCellColorPickerChange(ActionEvent actionEvent) {
 		boardDrawingConfig.setCellActiveColor(activeCellColorPicker.getValue());
 		drawBoard();
+		animationSaver.step();
 		rebuildPatterns();
 	}
 
@@ -418,6 +433,7 @@ public class Controller {
 	public void OnInActiveCellColorPicker(ActionEvent actionEvent) {
 		boardDrawingConfig.setCellInactiveColor(inActiveCellColorPicker.getValue());
 		drawBoard();
+		animationSaver.step();
 		rebuildPatterns();
 	}
 
@@ -425,6 +441,7 @@ public class Controller {
 	public void onDrawGridCheckboxChange(ActionEvent actionEvent) {
 		boardDrawingConfig.setCellSpace(drawGridCheckbox.isSelected() ? 1 : 0);
 		drawBoard();
+		animationSaver.step();
 		rebuildPatterns();
 	}
 
@@ -432,6 +449,7 @@ public class Controller {
 	public void onGridColorPicker(ActionEvent actionEvent) {
 		boardDrawingConfig.setCellGridColor(gridColorPicker.getValue());
 		drawBoard();
+		animationSaver.step();
 		rebuildPatterns();
 	}
 
@@ -459,6 +477,7 @@ public class Controller {
 					drawCell(cell);
 				}
 			}
+			animationSaver.step();
 		}
 	}
 
@@ -724,6 +743,7 @@ public class Controller {
 						cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
 						cell.isAlive(!keyEvent.isAltDown() || !cell.isAlive());
 						drawCell(cell);
+						animationSaver.step();
 					}
 					changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1, currentCellPosition.getColumn()));
 					break;
@@ -732,6 +752,7 @@ public class Controller {
 						cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
 						cell.isAlive(!keyEvent.isAltDown() || !cell.isAlive());
 						drawCell(cell);
+						animationSaver.step();
 					}
 					changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow() == (boardDrawingConfig.getRows() - 1) ? 0 : currentCellPosition.getRow() + 1, currentCellPosition.getColumn()));
 					break;
@@ -740,6 +761,7 @@ public class Controller {
 						cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
 						cell.isAlive(!keyEvent.isAltDown() || !cell.isAlive());
 						drawCell(cell);
+						animationSaver.step();
 					}
 					changeCurrentCellPosition(new GridPosition(
 							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
@@ -750,6 +772,7 @@ public class Controller {
 						cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
 						cell.isAlive(!keyEvent.isAltDown() || !cell.isAlive());
 						drawCell(cell);
+						animationSaver.step();
 					}
 					changeCurrentCellPosition(new GridPosition(
 							currentCellPosition.getColumn() == boardDrawingConfig.getColumns() - 1 ? (currentCellPosition.getRow() == boardDrawingConfig.getRows() - 1 ? 0 : currentCellPosition.getRow() + 1) : currentCellPosition.getRow(),
@@ -779,6 +802,7 @@ public class Controller {
 					cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
 					cell.isAlive(!keyEvent.isControlDown());
 					drawCell(cell);
+					animationSaver.step();
 					changeCurrentCellPosition(new GridPosition(
 							currentCellPosition.getColumn() == boardDrawingConfig.getColumns() - 1 ? (currentCellPosition.getRow() == boardDrawingConfig.getRows() - 1 ? 0 : currentCellPosition.getRow() + 1) : currentCellPosition.getRow(),
 							currentCellPosition.getColumn() == (boardDrawingConfig.getColumns() - 1) ? 0 : currentCellPosition.getColumn() + 1));
@@ -787,11 +811,13 @@ public class Controller {
 					cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
 					cell.isAlive(false);
 					drawCell(cell);
+					animationSaver.step();
 					break;
 				case BACK_SPACE:
 					cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
 					cell.isAlive(keyEvent.isControlDown());
 					drawCell(cell);
+					animationSaver.step();
 					changeCurrentCellPosition(new GridPosition(
 							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
 							currentCellPosition.getColumn() == 0 ? boardDrawingConfig.getColumns() - 1 : currentCellPosition.getColumn() - 1));
@@ -812,6 +838,7 @@ public class Controller {
 						board.drawPattern(top, currentCellPosition.getColumn(), characterPattern);
 						redrawBoardArea(top, currentCellPosition.getColumn(), characterPattern.rows(), characterPattern.columns());
 						changeCurrentCellPosition(new GridPosition(top + (characterPattern.rows() - 2), Math.min(boardDrawingConfig.getColumns() - 1, currentCellPosition.getColumn() + characterPattern.columns() + 1)));
+						animationSaver.step();
 					}
 				}
 			}
@@ -883,5 +910,20 @@ public class Controller {
 				resizeBoard();
 			}
 		}
+	}
+
+	public void onSaveAnimationCheckboxChanged(ActionEvent actionEvent) {
+		if (saveAnimationCheckbox.isSelected()) {
+			animationSaver.setFrameInterval((int) animationSpeedSlider.getValue());
+			animationSaver.start();
+			if (!animationSaver.isSaving()) {
+				saveAnimationCheckbox.setSelected(false);
+			} else {
+				saveAnimationToTextField.textProperty().setValue(animationSaver.getAnimationOutputFile().getAbsolutePath());
+			}
+		} else {
+			animationSaver.end();
+		}
+		saveAnimationToTextField.setVisible(animationSaver.isSaving());
 	}
 }
