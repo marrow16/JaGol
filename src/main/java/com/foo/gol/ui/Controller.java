@@ -109,6 +109,8 @@ public class Controller {
 	@FXML
 	private ComboBox<String> wrappingCombo;
 	@FXML
+	private CheckBox deadCellEdgesCheckbox;
+	@FXML
 	private GridPane lifeControlsGrid;
 	@FXML
 	private GridPane boardDrawingControlsGrid;
@@ -207,7 +209,7 @@ public class Controller {
 	}
 
 	private void createBoard(boolean randomize) {
-		board = new Board(boardDrawingConfig.getColumns(), boardDrawingConfig.getRows(), boardDrawingConfig.getWrappingMode(), generationController);
+		board = new Board(boardDrawingConfig.getColumns(), boardDrawingConfig.getRows(), boardDrawingConfig.getWrappingMode(), boardDrawingConfig.isDeadCellEdges(), generationController);
 		if (randomize) {
 			double randomDensity = randomDensitySlider.getValue() / 100d;
 			for (int row = 0; row < boardDrawingConfig.getRows(); row++) {
@@ -947,7 +949,20 @@ public class Controller {
 			BoardWrappingMode wrappingMode = BoardWrappingMode.fromString(wrappingCombo.getValue());
 			if (wrappingMode != null && boardDrawingConfig.getWrappingMode() != wrappingMode) {
 				boardDrawingConfig.setWrappingMode(wrappingMode);
+				deadCellEdgesCheckbox.setDisable(wrappingMode == BoardWrappingMode.BOTH);
 				resizeBoard();
+			}
+		}
+	}
+
+	public void onDeadCellEdgesCheckboxChanged(ActionEvent actionEvent) {
+		if (!running) {
+			boolean deadCellEdges = deadCellEdgesCheckbox.isSelected();
+			if (deadCellEdges != boardDrawingConfig.isDeadCellEdges()) {
+				boardDrawingConfig.setDeadCellEdges(deadCellEdges);
+				if (boardDrawingConfig.getWrappingMode() != BoardWrappingMode.BOTH) {
+					resizeBoard();
+				}
 			}
 		}
 	}
@@ -966,4 +981,5 @@ public class Controller {
 		}
 		saveAnimationToTextField.setVisible(animationSaver.isSaving());
 	}
+
 }

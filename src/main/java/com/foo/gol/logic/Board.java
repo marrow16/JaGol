@@ -9,17 +9,19 @@ public class Board implements IBoard {
 	private int height;
 	private IGenerationController generationController;
 	private BoardWrappingMode wrappingMode = BoardWrappingMode.NONE;
+	private boolean deadCellEdges = false;
 
-	public Board(int width, int height, BoardWrappingMode wrappingMode, @NotNull IGenerationController generationController) {
-		this(width, height, wrappingMode, generationController, null);
+	public Board(int width, int height, BoardWrappingMode wrappingMode, boolean deadCellEdges, @NotNull IGenerationController generationController) {
+		this(width, height, wrappingMode, deadCellEdges, generationController, null);
 	}
 
-	public Board(int width, int height, BoardWrappingMode wrappingMode, @NotNull IGenerationController generationController, int[] initialCells) {
+	public Board(int width, int height, BoardWrappingMode wrappingMode, boolean deadCellEdges, @NotNull IGenerationController generationController, int[] initialCells) {
 		if (generationController == null) {
 			throw new IllegalArgumentException("Generation controller may not be null");
 		}
 		this.generationController = generationController;
 		this.wrappingMode = (wrappingMode == null ? BoardWrappingMode.NONE : wrappingMode);
+		this.deadCellEdges = deadCellEdges;
 		if (width <= 0) {
 			throw new IllegalArgumentException("Board cannot have a columns of less than or equal to zero");
 		}
@@ -71,6 +73,30 @@ public class Board implements IBoard {
 			case BOTH:
 				adjacentFullWrapping();
 		}
+		if (deadCellEdges) {
+			ICell deadCell;
+			switch (wrappingMode) {
+				case VERTICAL:
+					addDeadCellsLeftAndRight();
+					deadCell = new DeadCell();
+					Cell.makeTwoCellsAdjacent(cells[0][0], deadCell);
+					Cell.makeTwoCellsAdjacent(cells[0][width - 1], deadCell);
+					Cell.makeTwoCellsAdjacent(cells[height - 1][0], deadCell);
+					Cell.makeTwoCellsAdjacent(cells[height - 1][width - 1], deadCell);
+					break;
+				case HORIZONTAL:
+					addDeadCellsTopAndBottom();
+					deadCell = new DeadCell();
+					Cell.makeTwoCellsAdjacent(cells[0][0], deadCell);
+					Cell.makeTwoCellsAdjacent(cells[0][width - 1], deadCell);
+					Cell.makeTwoCellsAdjacent(cells[height - 1][0], deadCell);
+					Cell.makeTwoCellsAdjacent(cells[height - 1][width - 1], deadCell);
+					break;
+				case NONE:
+					addDeadCellsAllAround();
+					break;
+			}
+		}
 		generationController.endInitialisation();
 	}
 
@@ -109,6 +135,48 @@ public class Board implements IBoard {
 		int lastRow = height - 1;
 		Cell.makeTwoCellsAdjacent(cells[0][0], cells[lastRow][lastColumn]);
 		Cell.makeTwoCellsAdjacent(cells[0][lastColumn], cells[lastRow][0]);
+	}
+
+	private void addDeadCellsLeftAndRight() {
+		ICell deadCell = new DeadCell();
+		int lastColumn = width - 1;
+		int lastRow = height - 1;
+		for (int row = 0; row < height; row++) {
+			Cell.makeTwoCellsAdjacent(cells[row][0], deadCell);
+			Cell.makeTwoCellsAdjacent(cells[row][0], deadCell);
+			Cell.makeTwoCellsAdjacent(cells[row][lastColumn], deadCell);
+			Cell.makeTwoCellsAdjacent(cells[row][lastColumn], deadCell);
+			if (row != 0 && row != lastRow) {
+				Cell.makeTwoCellsAdjacent(cells[row][0], deadCell);
+				Cell.makeTwoCellsAdjacent(cells[row][lastColumn], deadCell);
+			}
+		}
+	}
+
+	private void addDeadCellsTopAndBottom() {
+		ICell deadCell = new DeadCell();
+		int lastColumn = width - 1;
+		int lastRow = height - 1;
+		for (int column = 0; column < height; column++) {
+			Cell.makeTwoCellsAdjacent(cells[0][column], deadCell);
+			Cell.makeTwoCellsAdjacent(cells[0][column], deadCell);
+			Cell.makeTwoCellsAdjacent(cells[lastRow][column], deadCell);
+			Cell.makeTwoCellsAdjacent(cells[lastRow][column], deadCell);
+			if (column != 0 && column != lastColumn) {
+				Cell.makeTwoCellsAdjacent(cells[0][column], deadCell);
+				Cell.makeTwoCellsAdjacent(cells[lastRow][column], deadCell);
+			}
+		}
+	}
+
+	private void addDeadCellsAllAround() {
+		addDeadCellsLeftAndRight();
+		addDeadCellsTopAndBottom();
+		ICell deadCell = new DeadCell();
+		Cell.makeTwoCellsAdjacent(cells[0][0], deadCell);
+		Cell.makeTwoCellsAdjacent(cells[0][width - 1], deadCell);
+		Cell.makeTwoCellsAdjacent(cells[height - 1][0], deadCell);
+		Cell.makeTwoCellsAdjacent(cells[height - 1][width - 1], deadCell);
 	}
 
 	@Override

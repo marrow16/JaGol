@@ -113,6 +113,7 @@
 										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
 										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 
 										<RowConstraints vgrow="ALWAYS" />
 									</rowConstraints>
@@ -228,6 +229,7 @@
 												<Insets right="4" />
 											</GridPane.margin>
 										</ComboBox>
+										<CheckBox fx:id="deadCellEdgesCheckbox" text="Dead cell edges" onAction="#onDeadCellEdgesCheckboxChanged" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="15" selected="false"/>
 
 									</children>
 									<padding>

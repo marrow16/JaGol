@@ -7,6 +7,7 @@ public class BoardDrawingConfig {
 	private int columns = 60;
 	private int rows = 60;
 	private BoardWrappingMode wrappingMode = BoardWrappingMode.NONE;
+	private boolean deadCellEdges = false;
 	private int cellSize = 6;
 	private int cellSpace = 1;
 	private Color cellActiveColor = Color.DODGERBLUE;
@@ -67,5 +68,12 @@ public class BoardDrawingConfig {
 	}
 	public void setWrappingMode(BoardWrappingMode wrappingMode) {
 		this.wrappingMode = wrappingMode;
+	}
+
+	public boolean isDeadCellEdges() {
+		return deadCellEdges;
+	}
+	public void setDeadCellEdges(boolean deadCellEdges) {
+		this.deadCellEdges = deadCellEdges;
 	}
 }
