@@ -1,14 +1,13 @@
 package com.foo.gol.logic;
 
-import com.foo.gol.logic.Board;
-import com.foo.gol.logic.IBoard;
+import com.foo.gol.logic.rule.StandardConways;
 import junit.framework.TestCase;
 
 public class BoardTests extends TestCase {
 	public void testBoardCreateFails() {
 		boolean failed = false;
 		try {
-			IBoard board = new Board(0,1, null, new FullScanGenerationController(new StandardLifeChangeAliveRule()));
+			IBoard board = new Board(0,1, null, new FullScanGenerationController(new StandardConways()));
 		} catch (IllegalArgumentException e) {
 			failed = true;
 		}
@@ -18,7 +17,7 @@ public class BoardTests extends TestCase {
 	public void testBoardCreateFails2() {
 		boolean failed = false;
 		try {
-			IBoard board = new Board(1,0, null, new FullScanGenerationController(new StandardLifeChangeAliveRule()));
+			IBoard board = new Board(1,0, null, new FullScanGenerationController(new StandardConways()));
 		} catch (IllegalArgumentException e) {
 			failed = true;
 		}
@@ -28,7 +27,7 @@ public class BoardTests extends TestCase {
 	public void testBoardCreateFails3() {
 		boolean failed = false;
 		try {
-			IBoard board = new Board(3,3, null, new FullScanGenerationController(new StandardLifeChangeAliveRule()), new int[4]);
+			IBoard board = new Board(3,3, null, new FullScanGenerationController(new StandardConways()), new int[4]);
 		} catch (IllegalArgumentException e) {
 			failed = true;
 		}
@@ -36,7 +35,7 @@ public class BoardTests extends TestCase {
 	}
 
 	public void testBoardCreateWithActiveCells() {
-		IBoard board = new Board(3,3, null, new FullScanGenerationController(new StandardLifeChangeAliveRule()), new int[] {
+		IBoard board = new Board(3,3, null, new FullScanGenerationController(new StandardConways()), new int[] {
 				1,1,1,
 				1,1,1,
 				1,1,1
@@ -49,7 +48,7 @@ public class BoardTests extends TestCase {
 	}
 
 	public void testBoardCreationCellAdjacentCounts() {
-		IBoard board = new Board(5,5, null, new FullScanGenerationController(new StandardLifeChangeAliveRule()));
+		IBoard board = new Board(5,5, null, new FullScanGenerationController(new StandardConways()));
 		int[][] expectedAdjacentCounts = new int[][] {
 				new int[] {3, 5, 5, 5, 3},
 				new int[] {5, 8, 8, 8, 5},

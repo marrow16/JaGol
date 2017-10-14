@@ -1,4 +1,6 @@
-package com.foo.gol.logic;
+package com.foo.gol.logic.rule;
+
+import com.foo.gol.logic.ICell;
 
 public interface IChangeAliveRule {
 	/**
@@ -11,6 +13,8 @@ public interface IChangeAliveRule {
 
 	String getAlivesSurviveString();
 	String getDeadsBornString();
+
+	String getRleString();
 
 	public static int countAdjacentsAlive(ICell cell) {
 		int result = 0;

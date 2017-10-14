@@ -171,6 +171,19 @@
 												<FXCollections fx:factory="observableArrayList">
 													<String fx:value="Standard" />
 													<String fx:value="HiLife" />
+													<String fx:value="Replicator" />
+													<String fx:value="Fredkin" />
+													<String fx:value="Seeds" />
+													<String fx:value="Live Free or Die" />
+													<String fx:value="Life without death" />
+													<String fx:value="Flock" />
+													<String fx:value="Mazectric" />
+													<String fx:value="Maze" />
+													<String fx:value="2X2" />
+													<String fx:value="Move" />
+													<String fx:value="Day &amp; Night" />
+													<String fx:value="DryLife" />
+													<String fx:value="Pedestrian Life" />
 													<String fx:value="Custom" />
 												</FXCollections>
 											</items>

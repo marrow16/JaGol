@@ -1,23 +1,21 @@
-package com.foo.gol.logic;
+package com.foo.gol.logic.rule;
 
-public class StandardLifeChangeAliveRule implements IChangeAliveRule {
+import com.foo.gol.logic.ICell;
+
+public class LifeWithoutDeath implements IChangeAliveRule {
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
 		boolean changes = false;
-		if (cell.isAlive()) {
-			if (adjacentsAlive < 2 || adjacentsAlive > 3) {
-				changes = true;
-			}
-		} else if (adjacentsAlive == 3) {
-			changes = true;
+		if (!cell.isAlive()) {
+			changes = adjacentsAlive == 3;
 		}
 		return changes;
 	}
 
 	@Override
 	public String getAlivesSurviveString() {
-		return "2,3";
+		return "0,1,2,3,4,5,6,7,8";
 	}
 
 	@Override
@@ -25,4 +23,8 @@ public class StandardLifeChangeAliveRule implements IChangeAliveRule {
 		return "3";
 	}
 
+	@Override
+	public String getRleString() {
+		return "B3/S012345678";
+	}
 }

@@ -2,12 +2,11 @@ package com.foo.gol.patterns;
 
 import com.foo.gol.logic.Cell;
 import com.foo.gol.logic.ICell;
+import com.foo.gol.logic.rule.IChangeAliveRule;
 import com.foo.gol.ui.BoardDrawingConfig;
-import javafx.geometry.Insets;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
@@ -18,6 +17,11 @@ public class Pattern implements IPattern {
 	protected int columns;
 	protected int rows;
 	protected List<ICell> cells;
+
+	protected List<String> comments = new ArrayList<>();
+	protected String origination;
+	protected String coordinates;
+	protected IChangeAliveRule rule;
 
 	public Pattern(String name, int columns, int[] pattern) {
 		this.name = name;
@@ -38,22 +42,22 @@ public class Pattern implements IPattern {
 		}
 	}
 
-	public String name() {
-		return name;
-	}
-
+	@Override
 	public int columns() {
 		return columns;
 	}
 
+	@Override
 	public int rows() {
 		return rows;
 	}
 
+	@Override
 	public List<ICell> cells() {
 		return cells;
 	}
 
+	@Override
 	public ICell cell(int row, int column) {
 		if (row < 0 || row >= rows || column < 0 || column >= columns) {
 			throw new IndexOutOfBoundsException("Row/column is out of bounds");
@@ -61,6 +65,7 @@ public class Pattern implements IPattern {
 		return cells.get((row * columns) + column);
 	}
 
+	@Override
 	public PatternVBox generateDisplay(BoardDrawingConfig drawingConfig) {
 		PatternVBox result = new PatternVBox(this);
 		int cellSize = drawingConfig.getCellSize();
@@ -100,5 +105,50 @@ public class Pattern implements IPattern {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public List<String> getComments() {
+		return comments;
+	}
+
+	@Override
+	public String getOrigination() {
+		return origination;
+	}
+
+	@Override
+	public void setOrigination(String origination) {
+		this.origination = origination;
+	}
+
+	@Override
+	public String getCoordinates() {
+		return coordinates;
+	}
+
+	@Override
+	public void setCoordinates(String coordinates) {
+		this.coordinates = coordinates;
+	}
+
+	@Override
+	public IChangeAliveRule getRule() {
+		return rule;
+	}
+
+	@Override
+	public void setRule(IChangeAliveRule rule) {
+		this.rule = rule;
 	}
 }

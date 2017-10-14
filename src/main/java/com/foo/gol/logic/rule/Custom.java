@@ -1,35 +1,50 @@
-package com.foo.gol.logic;
+package com.foo.gol.logic.rule;
+
+import com.foo.gol.logic.ICell;
 
 import java.util.*;
 
-public class CustomChangeAliveRule implements IChangeAliveRule {
+public class Custom implements IChangeAliveRule {
 	private Set<Integer> survivesWithCounts;
 	private Set<Integer> bornWithCounts;
 	private String survivesString;
 	private String bornString;
+	private String rleString;
 
-	public CustomChangeAliveRule(String survivesString, String bornString) {
+	public Custom(String survivesString, String bornString) {
 		this.survivesString = survivesString;
 		this.bornString = bornString;
 		survivesWithCounts = new HashSet<>();
 		bornWithCounts = new HashSet<>();
+		Integer val;
 		for (String count: survivesString.split("[, ]")) {
-			try {
-				survivesWithCounts.add(Integer.parseInt(count));
-			} catch (NumberFormatException nfe) {
-				// swallow
+			if (!count.isEmpty()) {
+				try {
+					val = Integer.parseInt(count);
+					if (val >= 0 && val < 10) {
+						survivesWithCounts.add(val);
+					}
+				} catch (NumberFormatException nfe) {
+					// swallow
+				}
 			}
 		}
 		for (String count: bornString.split("[, ]")) {
-			try {
-				bornWithCounts.add(Integer.parseInt(count));
-			} catch (NumberFormatException nfe) {
-				// swallow
+			if (!count.isEmpty()) {
+				try {
+					val = Integer.parseInt(count);
+					if (val >= 0 && val < 10) {
+						bornWithCounts.add(val);
+					}
+				} catch(NumberFormatException nfe){
+					// swallow
+				}
 			}
 		}
+		buildRleString();
 	}
 
-	public CustomChangeAliveRule(Set<Integer> survivesWithCounts, Set<Integer> bornWithCounts) {
+	public Custom(Set<Integer> survivesWithCounts, Set<Integer> bornWithCounts) {
 		this.survivesWithCounts = new HashSet<>(survivesWithCounts);
 		this.bornWithCounts = new HashSet<>(bornWithCounts);
 		List<Integer> survives = new ArrayList<>(survivesWithCounts);
@@ -46,6 +61,24 @@ public class CustomChangeAliveRule implements IChangeAliveRule {
 			builder.append(i == 0 ? "" : ",").append(borns.get(i));
 		}
 		bornString = builder.toString();
+		buildRleString();
+	}
+
+	private void buildRleString() {
+		StringBuilder builder = new StringBuilder(3 + survivesWithCounts.size() + bornWithCounts.size());
+		builder.append("B");
+		List<Integer> sorted = new ArrayList<>(bornWithCounts);
+		sorted.sort((o1, o2) -> o1.compareTo(o2));
+		for (Integer val: sorted) {
+			builder.append(val);
+		}
+		builder.append("/S");
+		sorted = new ArrayList<>(survivesWithCounts);
+		sorted.sort((o1, o2) -> o1.compareTo(o2));
+		for (Integer val: sorted) {
+			builder.append(val);
+		}
+		rleString = builder.toString();
 	}
 
 	@Override
@@ -68,5 +101,10 @@ public class CustomChangeAliveRule implements IChangeAliveRule {
 	@Override
 	public String getDeadsBornString() {
 		return bornString;
+	}
+
+	@Override
+	public String getRleString() {
+		return rleString;
 	}
 }

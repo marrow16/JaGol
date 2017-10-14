@@ -10,7 +10,7 @@ public class PatternRLELoaderTests extends TestCase {
 		URL url = this.getClass().getResource("lwss.rle");
 		File file = new File(url.toURI());
 		IPattern pattern = PatternRLELoader.load(file);
-		assertEquals("Lightweight spaceship", pattern.name());
+		assertEquals("Lightweight spaceship", pattern.getName());
 		assertEquals(6, pattern.rows());
 		assertEquals(7, pattern.columns());
 		int[][] checkPattern = new int[][] {
@@ -32,7 +32,7 @@ public class PatternRLELoaderTests extends TestCase {
 		URL url = this.getClass().getResource("gosper.rle");
 		File file = new File(url.toURI());
 		IPattern pattern = PatternRLELoader.load(file);
-		assertEquals("Gosper glider gun", pattern.name());
+		assertEquals("Gosper glider gun", pattern.getName());
 		assertEquals(11, pattern.rows());
 		assertEquals(38, pattern.columns());
 		int[][] checkPattern = new int[][] {
@@ -63,7 +63,7 @@ public class PatternRLELoaderTests extends TestCase {
 				"x = 5, y = 4, rule = B3/S23\n" +
 				"bo2bo$o4b$o3bo$4o!";
 		IPattern pattern = PatternRLELoader.load("Test", lwssRle);
-		assertEquals("Lightweight spaceship", pattern.name());
+		assertEquals("Lightweight spaceship", pattern.getName());
 		assertEquals(6, pattern.rows());
 		assertEquals(7, pattern.columns());
 		int[][] checkPattern = new int[][] {
@@ -97,7 +97,7 @@ public class PatternRLELoaderTests extends TestCase {
 				"o5bobo5bo$" +
 				"bob2obobob2obo!";
 		IPattern pattern = PatternRLELoader.load("Test", dartRle);
-		assertEquals("Dart", pattern.name());
+		assertEquals("Dart", pattern.getName());
 		assertEquals(12, pattern.rows());
 		assertEquals(17, pattern.columns());
 		int[][] checkPattern = new int[][] {

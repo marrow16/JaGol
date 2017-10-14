@@ -1,6 +1,7 @@
 package com.foo.gol.ui;
 
 import com.foo.gol.logic.*;
+import com.foo.gol.logic.rule.*;
 import com.foo.gol.patterns.*;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -37,7 +38,7 @@ public class Controller {
 
 	private BoardDrawingConfig boardDrawingConfig;
 	private IBoard board;
-	private IGenerationController generationController;
+	private IGenerationController generationController = new FullScanGenerationController(new StandardConways());
 	private Timeline animationLoop = null;
 	private PatternLibrary patternLibrary;
 
@@ -206,7 +207,6 @@ public class Controller {
 	}
 
 	private void createBoard(boolean randomize) {
-		generationController = new FullScanGenerationController(new StandardLifeChangeAliveRule());
 		board = new Board(boardDrawingConfig.getColumns(), boardDrawingConfig.getRows(), boardDrawingConfig.getWrappingMode(), generationController);
 		if (randomize) {
 			double randomDensity = randomDensitySlider.getValue() / 100d;
@@ -312,12 +312,12 @@ public class Controller {
 			selectedPattern = patternVBox;
 			selectedPattern.showSelectedBorder();
 			if (!running) {
-				Dragboard db = patternVBox.startDragAndDrop(TransferMode.MOVE);
+				Dragboard dragboard = patternVBox.startDragAndDrop(TransferMode.MOVE);
 				patternVBox.prepareForDrag();
-				db.setDragView(patternVBox.snapshot(null, null));
-				ClipboardContent cc = new ClipboardContent();
-				cc.put(patternDragFormat, pattern.name());
-				db.setContent(cc);
+				dragboard.setDragView(patternVBox.snapshot(null, null));
+				ClipboardContent clipboardContent = new ClipboardContent();
+				clipboardContent.put(patternDragFormat, pattern.getName());
+				dragboard.setContent(clipboardContent);
 				draggingPattern = patternVBox;
 				selectedPattern.showSelectedBorder();
 			}
@@ -684,40 +684,75 @@ public class Controller {
 
 	public void onRuleComboChanged(ActionEvent actionEvent) {
 		if (!running) {
+			boolean isCustom = false;
 			switch (ruleCombo.getValue()) {
 				case "HiLife":
-					generationController.setChangeAliveRule(new HiLifeChangeAliveRule());
-					alivesSurviveTextField.setDisable(true);
-					deadsBornTextField.setDisable(true);
-					alivesSurviveTextField.textProperty().setValue(generationController.getChangeAliveRule().getAlivesSurviveString());
-					deadsBornTextField.textProperty().setValue(generationController.getChangeAliveRule().getDeadsBornString());
+					generationController.setChangeAliveRule(new HiLife());
+					break;
+				case "Replicator":
+					generationController.setChangeAliveRule(new Replicator());
+					break;
+				case "Fredkin":
+					generationController.setChangeAliveRule(new Fredkin());
+					break;
+				case "Seeds":
+					generationController.setChangeAliveRule(new Seeds());
+					break;
+				case "Live Free or Die":
+					generationController.setChangeAliveRule(new LiveFreeOrDie());
+					break;
+				case "Life without death":
+					generationController.setChangeAliveRule(new LifeWithoutDeath());
+					break;
+				case "Flock":
+					generationController.setChangeAliveRule(new Flock());
+					break;
+				case "Mazectric":
+					generationController.setChangeAliveRule(new Mazectric());
+					break;
+				case "Maze":
+					generationController.setChangeAliveRule(new Maze());
+					break;
+				case "2X2":
+					generationController.setChangeAliveRule(new TwoXTwo());
+					break;
+				case "Move":
+					generationController.setChangeAliveRule(new Move());
+					break;
+				case "Day & Night":
+					generationController.setChangeAliveRule(new DayAndNight());
+					break;
+				case "DryLife":
+					generationController.setChangeAliveRule(new DryLife());
+					break;
+				case "Pedestrian Life":
+					generationController.setChangeAliveRule(new PedestrianLife());
 					break;
 				case "Custom":
-					alivesSurviveTextField.setDisable(false);
-					deadsBornTextField.setDisable(false);
-					generationController.setChangeAliveRule(new CustomChangeAliveRule(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
+					isCustom = true;
+					generationController.setChangeAliveRule(new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
 					break;
 				default:
 					// Standard
-					generationController.setChangeAliveRule(new StandardLifeChangeAliveRule());
-					alivesSurviveTextField.setDisable(true);
-					deadsBornTextField.setDisable(true);
-					alivesSurviveTextField.textProperty().setValue(generationController.getChangeAliveRule().getAlivesSurviveString());
-					deadsBornTextField.textProperty().setValue(generationController.getChangeAliveRule().getDeadsBornString());
+					generationController.setChangeAliveRule(new StandardConways());
 					break;
 			}
+			alivesSurviveTextField.setDisable(!isCustom);
+			deadsBornTextField.setDisable(!isCustom);
+			alivesSurviveTextField.textProperty().setValue(generationController.getChangeAliveRule().getAlivesSurviveString());
+			deadsBornTextField.textProperty().setValue(generationController.getChangeAliveRule().getDeadsBornString());
 		}
 	}
 
 	public void onAlivesSurviveTextFieldChanged() {
 		if (!running && "Custom".equals(ruleCombo.getValue()) && !alivesSurviveTextField.isDisabled()) {
-			generationController.setChangeAliveRule(new CustomChangeAliveRule(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
+			generationController.setChangeAliveRule(new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
 		}
 	}
 
 	public void onDeadsBornTextFieldChanged() {
 		if (!running && "Custom".equals(ruleCombo.getValue()) && !deadsBornTextField.isDisabled()) {
-			generationController.setChangeAliveRule(new CustomChangeAliveRule(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
+			generationController.setChangeAliveRule(new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
 		}
 	}
 

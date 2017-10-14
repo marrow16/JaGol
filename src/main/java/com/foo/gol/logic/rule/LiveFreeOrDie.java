@@ -1,27 +1,33 @@
-package com.foo.gol.logic;
+package com.foo.gol.logic.rule;
 
-public class HiLifeChangeAliveRule implements IChangeAliveRule {
+import com.foo.gol.logic.ICell;
+
+public class LiveFreeOrDie implements IChangeAliveRule {
+
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
 		boolean changes = false;
 		if (cell.isAlive()) {
-			if (adjacentsAlive < 2 || adjacentsAlive > 3) {
-				changes = true;
-			}
-		} else if (adjacentsAlive == 3 || adjacentsAlive == 6) {
-			changes = true;
+			changes = adjacentsAlive != 0;
+		} else {
+			changes = adjacentsAlive == 2;
 		}
 		return changes;
 	}
 
 	@Override
 	public String getAlivesSurviveString() {
-		return "2,3";
+		return "0";
 	}
 
 	@Override
 	public String getDeadsBornString() {
-		return "3,6";
+		return "2";
+	}
+
+	@Override
+	public String getRleString() {
+		return "B2/S0";
 	}
 }

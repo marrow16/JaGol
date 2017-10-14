@@ -1,5 +1,7 @@
 package com.foo.gol.logic;
 
+import com.foo.gol.logic.rule.IChangeAliveRule;
+
 import java.util.*;
 
 public class FullScanGenerationController implements IGenerationController {
