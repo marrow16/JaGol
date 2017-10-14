@@ -218,6 +218,7 @@
 													<String fx:value="None" />
 													<String fx:value="Horizontal" />
 													<String fx:value="Vertical" />
+													<String fx:value="Both" />
 												</FXCollections>
 											</items>
 											<value>

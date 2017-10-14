@@ -3,7 +3,8 @@ package com.foo.gol.logic;
 public enum BoardWrappingMode {
 	NONE,
 	VERTICAL,
-	HORIZONTAL;
+	HORIZONTAL,
+	BOTH;
 
 	public static BoardWrappingMode fromString(String str) {
 		BoardWrappingMode result = null;

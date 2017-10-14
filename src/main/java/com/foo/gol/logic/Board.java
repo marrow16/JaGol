@@ -68,6 +68,8 @@ public class Board implements IBoard {
 			case HORIZONTAL:
 				adjacentLeftAndRightColumns();
 				break;
+			case BOTH:
+				adjacentFullWrapping();
 		}
 		generationController.endInitialisation();
 	}
@@ -98,6 +100,15 @@ public class Board implements IBoard {
 				Cell.makeTwoCellsAdjacent(cells[row][0], cells[row + 1][lastColumn]);
 			}
 		}
+	}
+
+	private void adjacentFullWrapping() {
+		adjacentTopAndBottomRows();
+		adjacentLeftAndRightColumns();
+		int lastColumn = width - 1;
+		int lastRow = height - 1;
+		Cell.makeTwoCellsAdjacent(cells[0][0], cells[lastRow][lastColumn]);
+		Cell.makeTwoCellsAdjacent(cells[0][lastColumn], cells[lastRow][0]);
 	}
 
 	@Override
