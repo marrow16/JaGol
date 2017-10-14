@@ -135,7 +135,7 @@ public class Controller {
 		canvasGraphicsContext = canvas.getGraphicsContext2D();
 		animationSaver = new AnimationSaver(mainPane.getScene().getWindow(), canvas, (int)animationSpeedSlider.getValue());
 		animationSpeedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
-			animationSaver.setFrameInterval((int)newValue);
+			animationSaver.setFrameInterval(newValue.intValue());
 		});
 		fileChooser = new FileChooser();
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Game of Life pattern (*.rle)", "*.rle"));
@@ -333,15 +333,8 @@ public class Controller {
 			selectedPattern = patternVBox;
 			patternVBox.showSelectedBorder();
 			if (!running && event.getClickCount() == 2) {
-				int row = currentCellPosition.getRow();
-				int column = currentCellPosition.getColumn();
-				for (int r = 0; r < pattern.rows() && (row + r) < boardDrawingConfig.getRows(); r++) {
-					for (int c = 0; c < pattern.columns() && (column + c) < boardDrawingConfig.getColumns(); c++) {
-						ICell cell = board.cell(row + r, column + c);
-						cell.isAlive(pattern.cell(r, c).isAlive());
-						drawCell(cell);
-					}
-				}
+				board.drawPattern(currentCellPosition.getRow(), currentCellPosition.getColumn(), pattern);
+				redrawBoardArea(currentCellPosition.getRow(), currentCellPosition.getColumn(), pattern.rows(), pattern.columns());
 				animationSaver.step();
 				canvas.requestFocus();
 			}
@@ -467,17 +460,12 @@ public class Controller {
 		if (db.hasContent(patternDragFormat) && draggingPattern != null) {
 			dragEvent.setDropCompleted(true);
 			GridPosition position = GridPosition.fromXYCoordinate(boardDrawingConfig, dragEvent.getX(), dragEvent.getY());
-			int row = position.getRow();
-			int column = position.getColumn();
 			IPattern pattern = draggingPattern.getPattern();
-			for (int r = 0; r < pattern.rows() && (row + r) < boardDrawingConfig.getRows(); r++) {
-				for (int c = 0; c < pattern.columns() && (column + c) < boardDrawingConfig.getColumns(); c++) {
-					ICell cell = board.cell(row + r, column + c);
-					cell.isAlive(pattern.cell(r, c).isAlive());
-					drawCell(cell);
-				}
-			}
+			board.drawPattern(position.getRow(), position.getColumn(), pattern);
+			redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
 			animationSaver.step();
+			changeCurrentCellPosition(position);
+			canvas.requestFocus();
 		}
 	}
 
@@ -560,10 +548,16 @@ public class Controller {
 	@FXML
 	public void onCanvasMousePressed(MouseEvent mouseEvent) {
 		mouseEvent.consume();
+		changeCurrentCellPosition(GridPosition.fromXYCoordinate(boardDrawingConfig, mouseEvent.getX(), mouseEvent.getY()));
 		if (!canvas.isFocused()) {
 			canvas.requestFocus();
+			// if we didn't have focus and we're not about to mark an area - get out
+			// this prevents first click on cell without focus from setting cell alive
+			if (!(mouseEvent.isPrimaryButtonDown() && (mouseEvent.isControlDown() || mouseEvent.isMetaDown()))) {
+				canvasDrawingMode = CanvasDrawingMode.NONE;
+				return;
+			}
 		}
-		changeCurrentCellPosition(GridPosition.fromXYCoordinate(boardDrawingConfig, mouseEvent.getX(), mouseEvent.getY()));
 		if (!running) {
 			canvasMarkedRectangle = null;
 			if (mouseEvent.isPrimaryButtonDown() && (mouseEvent.isControlDown() || mouseEvent.isMetaDown())) {
@@ -821,6 +815,17 @@ public class Controller {
 					changeCurrentCellPosition(new GridPosition(
 							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
 							currentCellPosition.getColumn() == 0 ? boardDrawingConfig.getColumns() - 1 : currentCellPosition.getColumn() - 1));
+					break;
+				case INSERT:
+					if (selectedPattern != null) {
+						IPattern pattern = selectedPattern.getPattern();
+						board.drawPattern(currentCellPosition.getRow(), currentCellPosition.getColumn(), pattern);
+						redrawBoardArea(currentCellPosition.getRow(), currentCellPosition.getColumn(), pattern.rows(), pattern.columns());
+						changeCurrentCellPosition(new GridPosition(
+								currentCellPosition.getRow(),
+								Math.min(currentCellPosition.getColumn() + pattern.columns(), boardDrawingConfig.getColumns() - 1)
+						));
+					}
 					break;
 			}
 		}
