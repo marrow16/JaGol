@@ -2,7 +2,9 @@ package com.foo.gol.logic.rule;
 
 import com.foo.gol.logic.ICell;
 
-public class StandardConways implements IChangeAliveRule {
+public class StandardConways extends AbstractPredefinedRule implements IChangeAliveRule {
+	public static final String LABEL = "Standard";
+
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
@@ -30,6 +32,11 @@ public class StandardConways implements IChangeAliveRule {
 	@Override
 	public String getRleString() {
 		return "B3/S23";
+	}
+
+	@Override
+	public String getType() {
+		return LABEL;
 	}
 
 }

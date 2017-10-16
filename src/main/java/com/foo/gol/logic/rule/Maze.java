@@ -2,7 +2,9 @@ package com.foo.gol.logic.rule;
 
 import com.foo.gol.logic.ICell;
 
-public class Maze implements IChangeAliveRule {
+public class Maze extends AbstractPredefinedRule implements IChangeAliveRule {
+	public static final String LABEL = "Maze";
+
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
@@ -28,5 +30,10 @@ public class Maze implements IChangeAliveRule {
 	@Override
 	public String getRleString() {
 		return "B3/S12345";
+	}
+
+	@Override
+	public String getType() {
+		return LABEL;
 	}
 }

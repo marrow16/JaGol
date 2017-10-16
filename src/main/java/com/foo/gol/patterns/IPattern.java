@@ -2,7 +2,7 @@ package com.foo.gol.patterns;
 
 import com.foo.gol.logic.ICell;
 import com.foo.gol.logic.rule.IChangeAliveRule;
-import com.foo.gol.ui.BoardDrawingConfig;
+import com.foo.gol.config.GameConfig;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ public interface IPattern {
 	List<ICell> cells();
 	ICell cell(int row, int column);
 
-	PatternVBox generateDisplay(BoardDrawingConfig drawingConfig);
+	PatternVBox generateDisplay(GameConfig drawingConfig);
 
 	String getName();
 	void setName(String name);

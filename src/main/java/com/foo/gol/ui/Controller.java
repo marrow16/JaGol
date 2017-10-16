@@ -1,5 +1,6 @@
 package com.foo.gol.ui;
 
+import com.foo.gol.config.GameConfig;
 import com.foo.gol.logic.*;
 import com.foo.gol.logic.rule.*;
 import com.foo.gol.patterns.*;
@@ -36,7 +37,7 @@ public class Controller {
 
 	private final DataFormat patternDragFormat = new DataFormat("com.foo.gol.ui.pattern");
 
-	private BoardDrawingConfig boardDrawingConfig;
+	private GameConfig gameConfig;
 	private IBoard board;
 	private IGenerationController generationController = new FullScanGenerationController(new StandardConways());
 	private Timeline animationLoop = null;
@@ -134,36 +135,39 @@ public class Controller {
 	}
 
 	public void shown() {
-		mainPane.setDisable(false);
+		gameConfig = GameConfig.load();
+		populateRuleCombo();
+		syncControlsToSettings();
+
 		canvasGraphicsContext = canvas.getGraphicsContext2D();
-		animationSaver = new AnimationSaver(mainPane.getScene().getWindow(), canvas, (int)animationSpeedSlider.getValue());
+		animationSaver = new AnimationSaver(mainPane.getScene().getWindow(), canvas, (int)gameConfig.getGenerationDelay());
 		animationSpeedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+			gameConfig.setGenerationDelay(newValue.doubleValue());
 			animationSaver.setFrameInterval(newValue.intValue());
+		});
+		randomDensitySlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+			gameConfig.setRandomizationDensity(newValue.doubleValue());
 		});
 		fileChooser = new FileChooser();
 		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Game of Life pattern (*.rle)", "*.rle"));
 		fileChooser.setTitle("Load Pattern");
 		fileChooser.setInitialDirectory(initialDirectory);
 		patternLibrary = new PatternLibrary();
-		boardDrawingConfig = new BoardDrawingConfig();
-		boardWidthSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(5, 500, boardDrawingConfig.getColumns()));
 		boardWidthSpinner.getValueFactory().valueProperty().addListener((obs, oldValue, newValue) -> {
 			resizeBoard();
 		});
-		boardHeightSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(5, 500, boardDrawingConfig.getRows()));
 		boardHeightSpinner.getValueFactory().valueProperty().addListener((obs, oldValue, newValue) -> {
 			resizeBoard();
 		});
-		cellSizeSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, boardDrawingConfig.getCellSize()));
 		cellSizeSpinner.getValueFactory().valueProperty().addListener((obs, oldValue, newValue) -> {
-			boardDrawingConfig.setCellSize((Integer)newValue);
+			gameConfig.setCellSize((Integer)newValue);
 			drawBoard();
 			rebuildPatterns();
 		});
-		activeCellColorPicker.setValue(boardDrawingConfig.getCellActiveColor());
-		inActiveCellColorPicker.setValue(boardDrawingConfig.getCellInactiveColor());
-		drawGridCheckbox.setSelected(boardDrawingConfig.getCellSpace() > 0);
-		gridColorPicker.setValue(boardDrawingConfig.getCellGridColor());
+		activeCellColorPicker.setValue(gameConfig.getCellActiveColor());
+		inActiveCellColorPicker.setValue(gameConfig.getCellInactiveColor());
+		drawGridCheckbox.setSelected(gameConfig.getCellSpace() > 0);
+		gridColorPicker.setValue(gameConfig.getCellGridColor());
 
 		alivesSurviveTextField.textProperty().addListener((observable, oldValue, newValue) -> {
 			onAlivesSurviveTextFieldChanged();
@@ -192,6 +196,39 @@ public class Controller {
 		drawBoardMessage();
 		drawBoard();
 		loadPatterns();
+		mainPane.setDisable(false);
+	}
+
+	private void syncControlsToSettings() {
+		animationSpeedSlider.valueProperty().setValue(gameConfig.getGenerationDelay());
+		randomDensitySlider.valueProperty().setValue(gameConfig.getRandomizationDensity());
+		boardWidthSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(5, 500, gameConfig.getColumns()));
+		boardHeightSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(5, 500, gameConfig.getRows()));
+		cellSizeSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, gameConfig.getCellSize()));
+		wrappingCombo.setValue(gameConfig.getWrappingMode().getLabel());
+		deadCellEdgesCheckbox.setSelected(gameConfig.isDeadCellEdges());
+		deadCellEdgesCheckbox.setDisable(gameConfig.getWrappingMode() == BoardWrappingMode.BOTH);
+		ruleCombo.setValue(gameConfig.getChangeAliveRule().getType());
+		alivesSurviveTextField.setDisable(!gameConfig.getChangeAliveRule().isCustom());
+		deadsBornTextField.setDisable(!gameConfig.getChangeAliveRule().isCustom());
+		activeCellColorPicker.setValue(gameConfig.getCellActiveColor());
+		inActiveCellColorPicker.setValue(gameConfig.getCellInactiveColor());
+		drawGridCheckbox.setSelected(gameConfig.getCellSpace() != 0);
+		gridColorPicker.setValue(gameConfig.getCellGridColor());
+	}
+
+	private void populateRuleCombo() {
+		ruleCombo.getItems().clear();
+		String firstLabel = null;
+		for (String label: ChangeAliveRuleFactory.getLabelsList()) {
+			firstLabel = firstLabel == null ? label : firstLabel;
+			ruleCombo.getItems().add(label);
+		}
+		ruleCombo.getItems().add(ChangeAliveRuleFactory.CUSTOM_RULE_LABEL);
+		ruleCombo.setValue(firstLabel);
+		IChangeAliveRule selectedRule = ChangeAliveRuleFactory.createFromLabel(firstLabel);
+		alivesSurviveTextField.textProperty().setValue(selectedRule.getAlivesSurviveString());
+		deadsBornTextField.textProperty().setValue(selectedRule.getDeadsBornString());
 	}
 
 	private void drawBoardMessage() {
@@ -201,19 +238,19 @@ public class Controller {
 				AlphabetPatterns.stringToPattern("Of"),
 				AlphabetPatterns.stringToPattern("Life")
 		};
-		int atRow = (boardDrawingConfig.getRows() - ((AlphabetPatterns.CHAR_HEIGHT + 1) * lines.length)) / 2;
+		int atRow = (gameConfig.getRows() - ((AlphabetPatterns.CHAR_HEIGHT + 1) * lines.length)) / 2;
 		for (IPattern line: lines) {
-			board.drawPattern(atRow, (boardDrawingConfig.getColumns() - line.columns()) / 2, line);
+			board.drawPattern(atRow, (gameConfig.getColumns() - line.columns()) / 2, line);
 			atRow += (AlphabetPatterns.CHAR_HEIGHT + 1);
 		}
 	}
 
 	private void createBoard(boolean randomize) {
-		board = new Board(boardDrawingConfig.getColumns(), boardDrawingConfig.getRows(), boardDrawingConfig.getWrappingMode(), boardDrawingConfig.isDeadCellEdges(), generationController);
+		board = new Board(gameConfig.getColumns(), gameConfig.getRows(), gameConfig.getWrappingMode(), gameConfig.isDeadCellEdges(), generationController);
 		if (randomize) {
-			double randomDensity = randomDensitySlider.getValue() / 100d;
-			for (int row = 0; row < boardDrawingConfig.getRows(); row++) {
-				for (int column = 0; column < boardDrawingConfig.getColumns(); column++) {
+			double randomDensity = gameConfig.getRandomizationDensity() / 100d;
+			for (int row = 0; row < gameConfig.getRows(); row++) {
+				for (int column = 0; column < gameConfig.getColumns(); column++) {
 					board.cell(row, column).isAlive(Math.random() < randomDensity);
 				}
 			}
@@ -226,10 +263,10 @@ public class Controller {
 		if (currentCellPosition.getRow() >= newHeight || currentCellPosition.getColumn() >= newWidth) {
 			currentCellPosition = new GridPosition(Math.min(currentCellPosition.getRow(), newHeight - 1), Math.min(currentCellPosition.getColumn(), newWidth - 1));
 		}
-		int oldWidth = boardDrawingConfig.getColumns();
-		int oldHeight = boardDrawingConfig.getRows();
-		boardDrawingConfig.setRows(newHeight);
-		boardDrawingConfig.setColumns(newWidth);
+		int oldWidth = gameConfig.getColumns();
+		int oldHeight = gameConfig.getRows();
+		gameConfig.setRows(newHeight);
+		gameConfig.setColumns(newWidth);
 		IBoard oldBoard = board;
 		createBoard(false);
 		for (int row = 0, rowMax = Math.min(newHeight, oldHeight), columnMax = Math.min(newWidth, oldWidth); row < rowMax; row++) {
@@ -242,22 +279,22 @@ public class Controller {
 
 	private void drawBoard() {
 		synchronized (canvasGraphicsContext) {
-			int rows = boardDrawingConfig.getRows();
-			int columns = boardDrawingConfig.getColumns();
-			int cellSize = boardDrawingConfig.getCellSize();
-			int cellSpace = boardDrawingConfig.getCellSpace();
+			int rows = gameConfig.getRows();
+			int columns = gameConfig.getColumns();
+			int cellSize = gameConfig.getCellSize();
+			int cellSpace = gameConfig.getCellSpace();
 			int cellSpacing = cellSize + cellSpace;
 			int canvasWidth = 2 + (columns * cellSize) + ((columns - 1) * cellSpace);
 			int canvasHeight = 2 + (rows * cellSize) + ((rows - 1) * cellSpace);
 			canvas.setWidth(canvasWidth);
 			canvas.setHeight(canvasHeight);
-			canvasGraphicsContext.setFill(boardDrawingConfig.getCellInactiveColor());
+			canvasGraphicsContext.setFill(gameConfig.getCellInactiveColor());
 			canvasGraphicsContext.fillRect(0, 0, canvasWidth, canvasHeight);
-			canvasGraphicsContext.setStroke(Color.BLACK);
+			canvasGraphicsContext.setStroke(gameConfig.getBoardBorderColor());
 			canvasGraphicsContext.setLineWidth(1);
 			canvasGraphicsContext.strokeRect(0, 0, canvasWidth, canvasHeight);
 			if (cellSpace > 0) {
-				canvasGraphicsContext.setStroke(boardDrawingConfig.getCellGridColor());
+				canvasGraphicsContext.setStroke(gameConfig.getCellGridColor());
 				for (int r = 1; r < rows; r++) {
 					canvasGraphicsContext.strokeLine(1.5d, (r * cellSpacing) + 0.5d, canvasWidth - 1.5d, (r * cellSpacing) + 0.5d);
 				}
@@ -265,7 +302,7 @@ public class Controller {
 					canvasGraphicsContext.strokeLine((c * cellSpacing) + 0.5d, 1.5d, (c * cellSpacing) + 0.5d, canvasHeight - 1.5d);
 				}
 			}
-			canvasGraphicsContext.setFill(boardDrawingConfig.getCellActiveColor());
+			canvasGraphicsContext.setFill(gameConfig.getCellActiveColor());
 			for (int row = 0; row < rows; row++) {
 				for (int column = 0; column < columns; column++) {
 					if (board.cellAlive(row, column)) {
@@ -281,7 +318,7 @@ public class Controller {
 		draggingPattern = null;
 		patternsContainer.getChildren().clear();
 		for (IPattern pattern: patternLibrary.getPatterns()) {
-			PatternVBox vbox = pattern.generateDisplay(boardDrawingConfig);
+			PatternVBox vbox = pattern.generateDisplay(gameConfig);
 			patternsContainer.getChildren().add(vbox);
 			makePatternVBoxInteractive(vbox);
 		}
@@ -298,7 +335,7 @@ public class Controller {
 		draggingPattern = null;
 		patternsContainer.getChildren().clear();
 		for (IPattern pattern: patterns) {
-			PatternVBox vbox = pattern.generateDisplay(boardDrawingConfig);
+			PatternVBox vbox = pattern.generateDisplay(gameConfig);
 			patternsContainer.getChildren().add(vbox);
 			makePatternVBoxInteractive(vbox);
 		}
@@ -347,7 +384,7 @@ public class Controller {
 		running = true;
 		updateControls();
 		clearBlinkCell();
-		animationLoop = new Timeline(new KeyFrame(Duration.millis(animationSpeedSlider.getValue()), e -> {
+		animationLoop = new Timeline(new KeyFrame(Duration.millis(gameConfig.getGenerationDelay()), e -> {
 			generation();
 		}));
 		animationLoop.setCycleCount(-1);
@@ -362,10 +399,10 @@ public class Controller {
 
 	private void generation() {
 		List<ICell> changes = generationController.nextGeneration();
-		Color activeColor = boardDrawingConfig.getCellActiveColor();
-		Color inactiveColor = boardDrawingConfig.getCellInactiveColor();
-		int cellSize = boardDrawingConfig.getCellSize();
-		int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
+		Color activeColor = gameConfig.getCellActiveColor();
+		Color inactiveColor = gameConfig.getCellInactiveColor();
+		int cellSize = gameConfig.getCellSize();
+		int cellSpacing = cellSize + gameConfig.getCellSpace();
 		for (ICell cell: changes) {
 			canvasGraphicsContext.setFill(cell.isAlive() ? activeColor : inactiveColor);
 			canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
@@ -418,7 +455,7 @@ public class Controller {
 
 	@FXML
 	public void onActiveCellColorPickerChange(ActionEvent actionEvent) {
-		boardDrawingConfig.setCellActiveColor(activeCellColorPicker.getValue());
+		gameConfig.setCellActiveColor(activeCellColorPicker.getValue());
 		drawBoard();
 		animationSaver.step();
 		rebuildPatterns();
@@ -426,7 +463,7 @@ public class Controller {
 
 	@FXML
 	public void OnInActiveCellColorPicker(ActionEvent actionEvent) {
-		boardDrawingConfig.setCellInactiveColor(inActiveCellColorPicker.getValue());
+		gameConfig.setCellInactiveColor(inActiveCellColorPicker.getValue());
 		drawBoard();
 		animationSaver.step();
 		rebuildPatterns();
@@ -434,7 +471,7 @@ public class Controller {
 
 	@FXML
 	public void onDrawGridCheckboxChange(ActionEvent actionEvent) {
-		boardDrawingConfig.setCellSpace(drawGridCheckbox.isSelected() ? 1 : 0);
+		gameConfig.setCellSpace(drawGridCheckbox.isSelected() ? 1 : 0);
 		drawBoard();
 		animationSaver.step();
 		rebuildPatterns();
@@ -442,7 +479,7 @@ public class Controller {
 
 	@FXML
 	public void onGridColorPicker(ActionEvent actionEvent) {
-		boardDrawingConfig.setCellGridColor(gridColorPicker.getValue());
+		gameConfig.setCellGridColor(gridColorPicker.getValue());
 		drawBoard();
 		animationSaver.step();
 		rebuildPatterns();
@@ -461,7 +498,7 @@ public class Controller {
 		Dragboard db = dragEvent.getDragboard();
 		if (db.hasContent(patternDragFormat) && draggingPattern != null) {
 			dragEvent.setDropCompleted(true);
-			GridPosition position = GridPosition.fromXYCoordinate(boardDrawingConfig, dragEvent.getX(), dragEvent.getY());
+			GridPosition position = GridPosition.fromXYCoordinate(gameConfig, dragEvent.getX(), dragEvent.getY());
 			IPattern pattern = draggingPattern.getPattern();
 			board.drawPattern(position.getRow(), position.getColumn(), pattern);
 			redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
@@ -473,9 +510,9 @@ public class Controller {
 
 	private void drawCell(ICell cell) {
 		synchronized (canvasGraphicsContext) {
-			canvasGraphicsContext.setFill(cell.isAlive() ? boardDrawingConfig.getCellActiveColor() : boardDrawingConfig.getCellInactiveColor());
-			int cellSize = boardDrawingConfig.getCellSize();
-			int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
+			canvasGraphicsContext.setFill(cell.isAlive() ? gameConfig.getCellActiveColor() : gameConfig.getCellInactiveColor());
+			int cellSize = gameConfig.getCellSize();
+			int cellSpacing = cellSize + gameConfig.getCellSpace();
 			canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
 		}
 	}
@@ -490,7 +527,7 @@ public class Controller {
 				updateInitialDirectory(file.getParentFile());
 				try {
 					IPattern pattern = PatternRLELoader.load(file);
-					PatternVBox vbox = pattern.generateDisplay(boardDrawingConfig);
+					PatternVBox vbox = pattern.generateDisplay(gameConfig);
 					lastPatternVbox = vbox;
 					patternsContainer.getChildren().add(vbox);
 					makePatternVBoxInteractive(vbox);
@@ -531,7 +568,7 @@ public class Controller {
 			updateInitialDirectory(controller.getInitialDirectory());
 			if (controller.isModalResultOK()) {
 				IPattern pattern = PatternRLELoader.load(controller.getPatternName(), controller.getPatternRle());
-				PatternVBox vbox = pattern.generateDisplay(boardDrawingConfig);
+				PatternVBox vbox = pattern.generateDisplay(gameConfig);
 				patternsContainer.getChildren().add(vbox);
 				makePatternVBoxInteractive(vbox);
 			}
@@ -550,7 +587,7 @@ public class Controller {
 	@FXML
 	public void onCanvasMousePressed(MouseEvent mouseEvent) {
 		mouseEvent.consume();
-		changeCurrentCellPosition(GridPosition.fromXYCoordinate(boardDrawingConfig, mouseEvent.getX(), mouseEvent.getY()));
+		changeCurrentCellPosition(GridPosition.fromXYCoordinate(gameConfig, mouseEvent.getX(), mouseEvent.getY()));
 		if (!canvas.isFocused()) {
 			canvas.requestFocus();
 			// if we didn't have focus and we're not about to mark an area - get out
@@ -563,7 +600,7 @@ public class Controller {
 		if (!running) {
 			canvasMarkedRectangle = null;
 			if (mouseEvent.isPrimaryButtonDown() && (mouseEvent.isControlDown() || mouseEvent.isMetaDown())) {
-				canvasStartPosition = GridPosition.fromXYCoordinate(boardDrawingConfig, mouseEvent.getX(), mouseEvent.getY());
+				canvasStartPosition = GridPosition.fromXYCoordinate(gameConfig, mouseEvent.getX(), mouseEvent.getY());
 				canvasDrawingMode = CanvasDrawingMode.MARK_AREA;
 			} else if (mouseEvent.isPrimaryButtonDown()) {
 				canvasDrawingMode = CanvasDrawingMode.SET_ALIVE;
@@ -581,7 +618,7 @@ public class Controller {
 	public void onCanvasMouseReleased(MouseEvent mouseEvent) {
 		if (!running) {
 			ICell cell;
-			GridPosition position = GridPosition.fromXYCoordinate(boardDrawingConfig, mouseEvent.getX(), mouseEvent.getY());
+			GridPosition position = GridPosition.fromXYCoordinate(gameConfig, mouseEvent.getX(), mouseEvent.getY());
 			switch (canvasDrawingMode) {
 				case SET_ALIVE:
 					cell = board.cell(position.getRow(), position.getColumn());
@@ -616,7 +653,7 @@ public class Controller {
 							updateInitialDirectory(controller.getInitialDirectory());
 							if (controller.isModalResultOK()) {
 								IPattern pattern = PatternRLELoader.load(controller.getPatternName(), controller.getPatternRle());
-								PatternVBox vbox = pattern.generateDisplay(boardDrawingConfig);
+								PatternVBox vbox = pattern.generateDisplay(gameConfig);
 								patternsContainer.getChildren().add(vbox);
 								makePatternVBoxInteractive(vbox);
 							}
@@ -634,7 +671,7 @@ public class Controller {
 	public void onCanvasDragged(MouseEvent mouseEvent) {
 		if (!running) {
 			ICell cell;
-			GridPosition position = GridPosition.fromXYCoordinate(boardDrawingConfig, mouseEvent.getX(), mouseEvent.getY());
+			GridPosition position = GridPosition.fromXYCoordinate(gameConfig, mouseEvent.getX(), mouseEvent.getY());
 			switch (canvasDrawingMode) {
 				case SET_ALIVE:
 					cell = board.cell(position.getRow(), position.getColumn());
@@ -671,76 +708,30 @@ public class Controller {
 	}
 
 	private void drawCanvasMarking() {
-		Color restoreActiveColor = boardDrawingConfig.getCellActiveColor();
-		Color restoreInactiveColor = boardDrawingConfig.getCellInactiveColor();
-		boardDrawingConfig.setCellActiveColor(Color.RED);
-		boardDrawingConfig.setCellInactiveColor(Color.YELLOW);
+		Color restoreActiveColor = gameConfig.getCellActiveColor();
+		Color restoreInactiveColor = gameConfig.getCellInactiveColor();
+		gameConfig.setCellActiveColor(Color.RED);
+		gameConfig.setCellInactiveColor(Color.YELLOW);
 		for (int row = canvasMarkedRectangle.getStartRow(); row <= canvasMarkedRectangle.getEndRow(); row++) {
 			for (int column = canvasMarkedRectangle.getStartColumn(); column <= canvasMarkedRectangle.getEndColumn(); column++) {
 				drawCell(board.cell(row, column));
 			}
 		}
-		boardDrawingConfig.setCellActiveColor(restoreActiveColor);
-		boardDrawingConfig.setCellInactiveColor(restoreInactiveColor);
+		gameConfig.setCellActiveColor(restoreActiveColor);
+		gameConfig.setCellInactiveColor(restoreInactiveColor);
 	}
 
 	public void onRuleComboChanged(ActionEvent actionEvent) {
 		if (!running) {
-			boolean isCustom = false;
-			switch (ruleCombo.getValue()) {
-				case "HiLife":
-					generationController.setChangeAliveRule(new HiLife());
-					break;
-				case "Replicator":
-					generationController.setChangeAliveRule(new Replicator());
-					break;
-				case "Fredkin":
-					generationController.setChangeAliveRule(new Fredkin());
-					break;
-				case "Seeds":
-					generationController.setChangeAliveRule(new Seeds());
-					break;
-				case "Live Free or Die":
-					generationController.setChangeAliveRule(new LiveFreeOrDie());
-					break;
-				case "Life without death":
-					generationController.setChangeAliveRule(new LifeWithoutDeath());
-					break;
-				case "Flock":
-					generationController.setChangeAliveRule(new Flock());
-					break;
-				case "Mazectric":
-					generationController.setChangeAliveRule(new Mazectric());
-					break;
-				case "Maze":
-					generationController.setChangeAliveRule(new Maze());
-					break;
-				case "2X2":
-					generationController.setChangeAliveRule(new TwoXTwo());
-					break;
-				case "Move":
-					generationController.setChangeAliveRule(new Move());
-					break;
-				case "Day & Night":
-					generationController.setChangeAliveRule(new DayAndNight());
-					break;
-				case "DryLife":
-					generationController.setChangeAliveRule(new DryLife());
-					break;
-				case "Pedestrian Life":
-					generationController.setChangeAliveRule(new PedestrianLife());
-					break;
-				case "Custom":
-					isCustom = true;
-					generationController.setChangeAliveRule(new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
-					break;
-				default:
-					// Standard
-					generationController.setChangeAliveRule(new StandardConways());
-					break;
+			String selectedValue = ruleCombo.getValue();
+			//boolean isCustom = ChangeAliveRuleFactory.CUSTOM_RULE_LABEL.equals(selectedValue);
+			IChangeAliveRule newRule = ChangeAliveRuleFactory.createFromLabel(selectedValue);
+			if (newRule == null) {
+				newRule = new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue());
 			}
-			alivesSurviveTextField.setDisable(!isCustom);
-			deadsBornTextField.setDisable(!isCustom);
+			generationController.setChangeAliveRule(newRule);
+			alivesSurviveTextField.setDisable(!newRule.isCustom());
+			deadsBornTextField.setDisable(!newRule.isCustom());
 			alivesSurviveTextField.textProperty().setValue(generationController.getChangeAliveRule().getAlivesSurviveString());
 			deadsBornTextField.textProperty().setValue(generationController.getChangeAliveRule().getDeadsBornString());
 		}
@@ -776,7 +767,7 @@ public class Controller {
 						drawCell(cell);
 						animationSaver.step();
 					}
-					changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1, currentCellPosition.getColumn()));
+					changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow() == 0 ? gameConfig.getRows() - 1 : currentCellPosition.getRow() - 1, currentCellPosition.getColumn()));
 					break;
 				case DOWN:
 					if (keyEvent.isControlDown()) {
@@ -785,7 +776,7 @@ public class Controller {
 						drawCell(cell);
 						animationSaver.step();
 					}
-					changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow() == (boardDrawingConfig.getRows() - 1) ? 0 : currentCellPosition.getRow() + 1, currentCellPosition.getColumn()));
+					changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow() == (gameConfig.getRows() - 1) ? 0 : currentCellPosition.getRow() + 1, currentCellPosition.getColumn()));
 					break;
 				case LEFT:
 					if (keyEvent.isControlDown()) {
@@ -795,8 +786,8 @@ public class Controller {
 						animationSaver.step();
 					}
 					changeCurrentCellPosition(new GridPosition(
-							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
-							currentCellPosition.getColumn() == 0 ? boardDrawingConfig.getColumns() - 1 : currentCellPosition.getColumn() - 1));
+							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? gameConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
+							currentCellPosition.getColumn() == 0 ? gameConfig.getColumns() - 1 : currentCellPosition.getColumn() - 1));
 					break;
 				case RIGHT:
 					if (keyEvent.isControlDown()) {
@@ -806,8 +797,8 @@ public class Controller {
 						animationSaver.step();
 					}
 					changeCurrentCellPosition(new GridPosition(
-							currentCellPosition.getColumn() == boardDrawingConfig.getColumns() - 1 ? (currentCellPosition.getRow() == boardDrawingConfig.getRows() - 1 ? 0 : currentCellPosition.getRow() + 1) : currentCellPosition.getRow(),
-							currentCellPosition.getColumn() == (boardDrawingConfig.getColumns() - 1) ? 0 : currentCellPosition.getColumn() + 1));
+							currentCellPosition.getColumn() == gameConfig.getColumns() - 1 ? (currentCellPosition.getRow() == gameConfig.getRows() - 1 ? 0 : currentCellPosition.getRow() + 1) : currentCellPosition.getRow(),
+							currentCellPosition.getColumn() == (gameConfig.getColumns() - 1) ? 0 : currentCellPosition.getColumn() + 1));
 					break;
 				case HOME:
 					if (keyEvent.isControlDown()) {
@@ -818,16 +809,16 @@ public class Controller {
 					break;
 				case END:
 					if (keyEvent.isControlDown()) {
-						changeCurrentCellPosition(new GridPosition(boardDrawingConfig.getRows() - 1,boardDrawingConfig.getColumns() - 1));
+						changeCurrentCellPosition(new GridPosition(gameConfig.getRows() - 1, gameConfig.getColumns() - 1));
 					} else {
-						changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow(), boardDrawingConfig.getColumns() - 1));
+						changeCurrentCellPosition(new GridPosition(currentCellPosition.getRow(), gameConfig.getColumns() - 1));
 					}
 					break;
 				case PAGE_UP:
 					changeCurrentCellPosition(new GridPosition(0, currentCellPosition.getColumn()));
 					break;
 				case PAGE_DOWN:
-					changeCurrentCellPosition(new GridPosition(boardDrawingConfig.getRows() - 1, currentCellPosition.getColumn()));
+					changeCurrentCellPosition(new GridPosition(gameConfig.getRows() - 1, currentCellPosition.getColumn()));
 					break;
 				case SPACE:
 					cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
@@ -835,8 +826,8 @@ public class Controller {
 					drawCell(cell);
 					animationSaver.step();
 					changeCurrentCellPosition(new GridPosition(
-							currentCellPosition.getColumn() == boardDrawingConfig.getColumns() - 1 ? (currentCellPosition.getRow() == boardDrawingConfig.getRows() - 1 ? 0 : currentCellPosition.getRow() + 1) : currentCellPosition.getRow(),
-							currentCellPosition.getColumn() == (boardDrawingConfig.getColumns() - 1) ? 0 : currentCellPosition.getColumn() + 1));
+							currentCellPosition.getColumn() == gameConfig.getColumns() - 1 ? (currentCellPosition.getRow() == gameConfig.getRows() - 1 ? 0 : currentCellPosition.getRow() + 1) : currentCellPosition.getRow(),
+							currentCellPosition.getColumn() == (gameConfig.getColumns() - 1) ? 0 : currentCellPosition.getColumn() + 1));
 					break;
 				case DELETE:
 					cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
@@ -850,8 +841,8 @@ public class Controller {
 					drawCell(cell);
 					animationSaver.step();
 					changeCurrentCellPosition(new GridPosition(
-							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? boardDrawingConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
-							currentCellPosition.getColumn() == 0 ? boardDrawingConfig.getColumns() - 1 : currentCellPosition.getColumn() - 1));
+							currentCellPosition.getColumn() == 0 ? (currentCellPosition.getRow() == 0 ? gameConfig.getRows() - 1 : currentCellPosition.getRow() - 1) : currentCellPosition.getRow(),
+							currentCellPosition.getColumn() == 0 ? gameConfig.getColumns() - 1 : currentCellPosition.getColumn() - 1));
 					break;
 				case INSERT:
 					if (selectedPattern != null) {
@@ -860,7 +851,7 @@ public class Controller {
 						redrawBoardArea(currentCellPosition.getRow(), currentCellPosition.getColumn(), pattern.rows(), pattern.columns());
 						changeCurrentCellPosition(new GridPosition(
 								currentCellPosition.getRow(),
-								Math.min(currentCellPosition.getColumn() + pattern.columns(), boardDrawingConfig.getColumns() - 1)
+								Math.min(currentCellPosition.getColumn() + pattern.columns(), gameConfig.getColumns() - 1)
 						));
 					}
 					break;
@@ -879,7 +870,7 @@ public class Controller {
 						int top = Math.max(0, currentCellPosition.getRow() - (characterPattern.rows() - 2));
 						board.drawPattern(top, currentCellPosition.getColumn(), characterPattern);
 						redrawBoardArea(top, currentCellPosition.getColumn(), characterPattern.rows(), characterPattern.columns());
-						changeCurrentCellPosition(new GridPosition(top + (characterPattern.rows() - 2), Math.min(boardDrawingConfig.getColumns() - 1, currentCellPosition.getColumn() + characterPattern.columns() + 1)));
+						changeCurrentCellPosition(new GridPosition(top + (characterPattern.rows() - 2), Math.min(gameConfig.getColumns() - 1, currentCellPosition.getColumn() + characterPattern.columns() + 1)));
 						animationSaver.step();
 					}
 				}
@@ -890,9 +881,9 @@ public class Controller {
 	private void redrawBoardArea(int top, int left, int height, int width) {
 		synchronized (canvasGraphicsContext) {
 			for (int row = 0; row < height; row++) {
-				if ((row + top) < boardDrawingConfig.getRows()) {
+				if ((row + top) < gameConfig.getRows()) {
 					for (int column = 0; column < width; column++) {
-						if ((column + left) < boardDrawingConfig.getColumns()) {
+						if ((column + left) < gameConfig.getColumns()) {
 							drawCell(board.cell(row + top, column + left));
 						}
 					}
@@ -907,9 +898,9 @@ public class Controller {
 				currentCellBlinkOn = !currentCellBlinkOn;
 				ICell cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
 				if (currentCellBlinkOn) {
-					canvasGraphicsContext.setFill((cell.isAlive() ? boardDrawingConfig.getCellActiveColor() : boardDrawingConfig.getCellInactiveColor()).invert());
-					int cellSize = boardDrawingConfig.getCellSize();
-					int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
+					canvasGraphicsContext.setFill((cell.isAlive() ? gameConfig.getCellActiveColor() : gameConfig.getCellInactiveColor()).invert());
+					int cellSize = gameConfig.getCellSize();
+					int cellSpacing = cellSize + gameConfig.getCellSpace();
 					canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
 				} else {
 					drawCell(cell);
@@ -938,17 +929,17 @@ public class Controller {
 
 	private void drawBlinkCell() {
 		ICell cell = board.cell(currentCellPosition.getRow(), currentCellPosition.getColumn());
-		canvasGraphicsContext.setFill((cell.isAlive() ? boardDrawingConfig.getCellActiveColor() : boardDrawingConfig.getCellInactiveColor()).invert());
-		int cellSize = boardDrawingConfig.getCellSize();
-		int cellSpacing = cellSize + boardDrawingConfig.getCellSpace();
+		canvasGraphicsContext.setFill((cell.isAlive() ? gameConfig.getCellActiveColor() : gameConfig.getCellInactiveColor()).invert());
+		int cellSize = gameConfig.getCellSize();
+		int cellSpacing = cellSize + gameConfig.getCellSpace();
 		canvasGraphicsContext.fillRect((cell.column() * cellSpacing) + 1, (cell.row() * cellSpacing) + 1, cellSize, cellSize);
 	}
 
 	public void onWrappingChanged(ActionEvent actionEvent) {
 		if (!running) {
 			BoardWrappingMode wrappingMode = BoardWrappingMode.fromString(wrappingCombo.getValue());
-			if (wrappingMode != null && boardDrawingConfig.getWrappingMode() != wrappingMode) {
-				boardDrawingConfig.setWrappingMode(wrappingMode);
+			if (wrappingMode != null && gameConfig.getWrappingMode() != wrappingMode) {
+				gameConfig.setWrappingMode(wrappingMode);
 				deadCellEdgesCheckbox.setDisable(wrappingMode == BoardWrappingMode.BOTH);
 				resizeBoard();
 			}
@@ -958,9 +949,9 @@ public class Controller {
 	public void onDeadCellEdgesCheckboxChanged(ActionEvent actionEvent) {
 		if (!running) {
 			boolean deadCellEdges = deadCellEdgesCheckbox.isSelected();
-			if (deadCellEdges != boardDrawingConfig.isDeadCellEdges()) {
-				boardDrawingConfig.setDeadCellEdges(deadCellEdges);
-				if (boardDrawingConfig.getWrappingMode() != BoardWrappingMode.BOTH) {
+			if (deadCellEdges != gameConfig.isDeadCellEdges()) {
+				gameConfig.setDeadCellEdges(deadCellEdges);
+				if (gameConfig.getWrappingMode() != BoardWrappingMode.BOTH) {
 					resizeBoard();
 				}
 			}
@@ -969,7 +960,7 @@ public class Controller {
 
 	public void onSaveAnimationCheckboxChanged(ActionEvent actionEvent) {
 		if (saveAnimationCheckbox.isSelected()) {
-			animationSaver.setFrameInterval((int) animationSpeedSlider.getValue());
+			animationSaver.setFrameInterval((int)gameConfig.getGenerationDelay());
 			animationSaver.start();
 			if (!animationSaver.isSaving()) {
 				saveAnimationCheckbox.setSelected(false);

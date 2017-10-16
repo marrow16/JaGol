@@ -15,6 +15,9 @@ public interface IChangeAliveRule {
 	String getDeadsBornString();
 
 	String getRleString();
+	String getType();
+
+	boolean isCustom();
 
 	public static int countAdjacentsAlive(ICell cell) {
 		int result = 0;

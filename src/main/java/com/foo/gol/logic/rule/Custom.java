@@ -5,11 +5,22 @@ import com.foo.gol.logic.ICell;
 import java.util.*;
 
 public class Custom implements IChangeAliveRule {
-	private Set<Integer> survivesWithCounts;
-	private Set<Integer> bornWithCounts;
-	private String survivesString;
-	private String bornString;
-	private String rleString;
+	public static final String LABEL = "Custom";
+
+	private String type;
+	private Set<Integer> survivesWithCounts = new HashSet<>();
+	private Set<Integer> bornWithCounts = new HashSet<>();
+	private String survivesString = "";
+	private String bornString = "";
+	private String rleString = "";
+
+	public Custom(String type) {
+		this.type = type;
+	}
+
+	public Custom() {
+		this.type = type;
+	}
 
 	public Custom(String survivesString, String bornString) {
 		this.survivesString = survivesString;
@@ -44,26 +55,6 @@ public class Custom implements IChangeAliveRule {
 		buildRleString();
 	}
 
-	public Custom(Set<Integer> survivesWithCounts, Set<Integer> bornWithCounts) {
-		this.survivesWithCounts = new HashSet<>(survivesWithCounts);
-		this.bornWithCounts = new HashSet<>(bornWithCounts);
-		List<Integer> survives = new ArrayList<>(survivesWithCounts);
-		survives.sort((o1, o2) -> o1.compareTo(o2));
-		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < survives.size(); i++) {
-			builder.append(i == 0 ? "" : ",").append(survives.get(i));
-		}
-		survivesString = builder.toString();
-		List<Integer> borns = new ArrayList<>(bornWithCounts);
-		borns.sort((o1, o2) -> o1.compareTo(o2));
-		builder = new StringBuilder();
-		for (int i = 0; i < borns.size(); i++) {
-			builder.append(i == 0 ? "" : ",").append(borns.get(i));
-		}
-		bornString = builder.toString();
-		buildRleString();
-	}
-
 	private void buildRleString() {
 		StringBuilder builder = new StringBuilder(3 + survivesWithCounts.size() + bornWithCounts.size());
 		builder.append("B");
@@ -81,12 +72,29 @@ public class Custom implements IChangeAliveRule {
 		rleString = builder.toString();
 	}
 
+	private void buildStrings() {
+		List<Integer> survives = new ArrayList<>(survivesWithCounts);
+		survives.sort((o1, o2) -> o1.compareTo(o2));
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < survives.size(); i++) {
+			builder.append(i == 0 ? "" : ",").append(survives.get(i));
+		}
+		survivesString = builder.toString();
+		List<Integer> borns = new ArrayList<>(bornWithCounts);
+		borns.sort((o1, o2) -> o1.compareTo(o2));
+		builder = new StringBuilder();
+		for (int i = 0; i < borns.size(); i++) {
+			builder.append(i == 0 ? "" : ",").append(borns.get(i));
+		}
+		bornString = builder.toString();
+	}
+
 	@Override
 	public boolean evaluate(ICell cell) {
 		boolean changes = false;
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
 		if (cell.isAlive()) {
-			changes = !survivesWithCounts.contains(adjacentsAlive);
+			changes = survivesWithCounts.size() == 0 || !survivesWithCounts.contains(adjacentsAlive);
 		} else if (bornWithCounts.contains(adjacentsAlive)) {
 			changes = true;
 		}
@@ -106,5 +114,47 @@ public class Custom implements IChangeAliveRule {
 	@Override
 	public String getRleString() {
 		return rleString;
+	}
+
+	public void setRleString(String rule) {
+		if (rule != null) {
+			String[] parts = rule.split("/");
+			if (parts.length == 2) {
+				String alivesSurvivePart = parts[0].startsWith("S") ? parts[0] : (parts[1].startsWith("S") ? parts[1] : null);
+				String deadsBornPart = parts[0].startsWith("B") ? parts[0] : (parts[1].startsWith("B") ? parts[1] : null);
+				if (alivesSurvivePart != null && deadsBornPart != null) {
+					survivesWithCounts = new HashSet<>();
+					bornWithCounts = new HashSet<>();
+					for (int c = 1; c < alivesSurvivePart.length(); c++) {
+						char ch = alivesSurvivePart.charAt(c);
+						if (ch >= '0' && ch < '9') {
+							survivesWithCounts.add(ch - 48);
+						}
+					}
+					for (int c = 1; c < deadsBornPart.length(); c++) {
+						char ch = deadsBornPart.charAt(c);
+						if (ch >= '0' && ch < '9') {
+							bornWithCounts.add(ch - 48);
+						}
+					}
+					rleString = rule;
+					buildStrings();
+				}
+			}
+		}
+	}
+
+	@Override
+	public String getType() {
+		return type != null ? type : LABEL;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	@Override
+	public boolean isCustom() {
+		return true;
 	}
 }

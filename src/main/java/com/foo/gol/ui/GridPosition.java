@@ -1,5 +1,7 @@
 package com.foo.gol.ui;
 
+import com.foo.gol.config.GameConfig;
+
 public class GridPosition {
 	private int row;
 	private int column;
@@ -9,7 +11,7 @@ public class GridPosition {
 		this.column = column;
 	}
 
-	public static GridPosition fromXYCoordinate(BoardDrawingConfig drawingConfig, double x, double y) {
+	public static GridPosition fromXYCoordinate(GameConfig drawingConfig, double x, double y) {
 		int cellSize = drawingConfig.getCellSize();
 		int cellSpacing = cellSize + drawingConfig.getCellSpace();
 		int row = Math.min((int)(y / cellSpacing), drawingConfig.getRows() - 1);

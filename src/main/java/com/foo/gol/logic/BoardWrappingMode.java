@@ -1,10 +1,20 @@
 package com.foo.gol.logic;
 
 public enum BoardWrappingMode {
-	NONE,
-	VERTICAL,
-	HORIZONTAL,
-	BOTH;
+	NONE("None"),
+	VERTICAL("Vertical"),
+	HORIZONTAL("Horizontal"),
+	BOTH("Both");
+
+	private String label;
+
+	BoardWrappingMode(String label) {
+		this.label = label;
+	}
+
+	public String getLabel() {
+		return label;
+	}
 
 	public static BoardWrappingMode fromString(String str) {
 		BoardWrappingMode result = null;

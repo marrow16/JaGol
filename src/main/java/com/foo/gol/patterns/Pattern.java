@@ -3,7 +3,7 @@ package com.foo.gol.patterns;
 import com.foo.gol.logic.Cell;
 import com.foo.gol.logic.ICell;
 import com.foo.gol.logic.rule.IChangeAliveRule;
-import com.foo.gol.ui.BoardDrawingConfig;
+import com.foo.gol.config.GameConfig;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
@@ -66,7 +66,7 @@ public class Pattern implements IPattern {
 	}
 
 	@Override
-	public PatternVBox generateDisplay(BoardDrawingConfig drawingConfig) {
+	public PatternVBox generateDisplay(GameConfig drawingConfig) {
 		PatternVBox result = new PatternVBox(this);
 		int cellSize = drawingConfig.getCellSize();
 		int cellSpace = drawingConfig.getCellSpace();

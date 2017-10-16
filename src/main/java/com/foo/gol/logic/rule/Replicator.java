@@ -2,7 +2,9 @@ package com.foo.gol.logic.rule;
 
 import com.foo.gol.logic.ICell;
 
-public class Replicator implements IChangeAliveRule {
+public class Replicator extends AbstractPredefinedRule implements IChangeAliveRule {
+	public static final String LABEL = "Replicator";
+
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
@@ -28,5 +30,10 @@ public class Replicator implements IChangeAliveRule {
 	@Override
 	public String getRleString() {
 		return "B1357/S1357";
+	}
+
+	@Override
+	public String getType() {
+		return LABEL;
 	}
 }

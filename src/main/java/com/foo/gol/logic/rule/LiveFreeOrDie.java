@@ -2,7 +2,8 @@ package com.foo.gol.logic.rule;
 
 import com.foo.gol.logic.ICell;
 
-public class LiveFreeOrDie implements IChangeAliveRule {
+public class LiveFreeOrDie extends AbstractPredefinedRule implements IChangeAliveRule {
+	public static final String LABEL = "Live Free or Die";
 
 	@Override
 	public boolean evaluate(ICell cell) {
@@ -29,5 +30,10 @@ public class LiveFreeOrDie implements IChangeAliveRule {
 	@Override
 	public String getRleString() {
 		return "B2/S0";
+	}
+
+	@Override
+	public String getType() {
+		return LABEL;
 	}
 }
