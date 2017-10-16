@@ -576,21 +576,64 @@ public class Controller {
 		Dragboard db = dragEvent.getDragboard();
 		if (db.hasContent(patternDragFormat) && draggingPattern != null) {
 			dragEvent.acceptTransferModes(TransferMode.MOVE);
+		} else if (db.hasContent(DataFormat.PLAIN_TEXT)) {
+			dragEvent.acceptTransferModes(TransferMode.COPY);
 		}
 	}
 
 	@FXML
 	public void onCanvasDragDropped(DragEvent dragEvent) {
-		Dragboard db = dragEvent.getDragboard();
-		if (db.hasContent(patternDragFormat) && draggingPattern != null) {
-			dragEvent.setDropCompleted(true);
+		if (!running) {
+			Dragboard db = dragEvent.getDragboard();
 			GridPosition position = GridPosition.fromXYCoordinate(gameConfig, dragEvent.getX(), dragEvent.getY());
-			IPattern pattern = draggingPattern.getPattern();
-			board.drawPattern(position.getRow(), position.getColumn(), pattern);
-			redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
-			animationSaver.step();
-			changeCurrentCellPosition(position);
-			canvas.requestFocus();
+			if (db.hasContent(patternDragFormat) && draggingPattern != null) {
+				dragEvent.setDropCompleted(true);
+				IPattern pattern = draggingPattern.getPattern();
+				board.drawPattern(position.getRow(), position.getColumn(), pattern);
+				redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
+				animationSaver.step();
+				changeCurrentCellPosition(position);
+				canvas.requestFocus();
+			} else if (db.hasContent(DataFormat.PLAIN_TEXT)) {
+				// see what the string smells like...
+				String droppedString = db.getString().trim();
+				if (droppedString.startsWith(".") || droppedString.startsWith("O") || droppedString.startsWith("!")) {
+					// possibly a plain text pattern encoding...
+					try {
+						IPattern pattern = PatternPlainTextLoader.load(null, droppedString);
+						board.drawPattern(position.getRow(), position.getColumn(), pattern);
+						redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
+					} catch (InvalidPlainTextFormatException e) {
+						e.printStackTrace();
+					}
+				} else if (droppedString.startsWith("#")) {
+					// possibly an rle pattern encoding...
+					try {
+						IPattern pattern = PatternRLELoader.load(null, droppedString);
+						board.drawPattern(position.getRow(), position.getColumn(), pattern);
+						redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
+					} catch (InvalidRLEFormatException e) {
+						e.printStackTrace();
+					}
+				} else {
+					// just print out text...
+					String[] lines = droppedString.split("\n");
+					int atRow = position.getRow();
+					int height = 0;
+					int width = 0;
+					for (String line : lines) {
+						IPattern linePattern = AlphabetPatterns.stringToPattern(line);
+						height += AlphabetPatterns.CHAR_HEIGHT;
+						width = Math.max(width, linePattern.columns());
+						board.drawPattern(atRow, position.getColumn(), linePattern);
+						atRow += AlphabetPatterns.CHAR_HEIGHT;
+						if (atRow >= gameConfig.getRows()) {
+							break;
+						}
+					}
+					redrawBoardArea(position.getRow(), position.getColumn(), height, width);
+				}
+			}
 		}
 	}
 
