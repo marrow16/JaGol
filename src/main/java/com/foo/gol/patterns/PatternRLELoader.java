@@ -1,5 +1,8 @@
 package com.foo.gol.patterns;
 
+import com.foo.gol.logic.rule.Custom;
+import com.foo.gol.logic.rule.IChangeAliveRule;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +31,10 @@ public class PatternRLELoader {
 		int columns = 0;
 		int rows = 0;
 		boolean endSeen = false;
+		List<String> comments = new ArrayList<>();
+		String origination = null;
+		String coordinates = null;
+		IChangeAliveRule rule = null;
 		for (String line: lines) {
 			if (dataStarted) {
 				dataBuilder.append(line);
@@ -37,6 +44,14 @@ public class PatternRLELoader {
 				}
 			} else if (line.startsWith("#N")) {
 				name = line.substring(2).trim();
+			} else if (line.startsWith("#C") || line.startsWith("#c")) {
+				comments.add(line.substring(2).trim());
+			} else if (line.startsWith("#O")) {
+				origination = line.substring(2).trim();
+			} else if (line.startsWith("#P") || line.startsWith("#R")) {
+				coordinates = line.substring(2).trim();
+			} else if (line.startsWith("#r")) {
+				rule = Custom.createFromRuleString(line.substring(2).trim());
 			} else if (line.startsWith("x")) {
 				String[] parts = line.split(",");
 				if (parts.length < 2) {
@@ -72,7 +87,18 @@ public class PatternRLELoader {
 			int addRow = decodeRleRow(columns, actualRow, rleLines[rowLine], pattern);
 			actualRow += addRow;
 		}
-		return new Pattern(name, columns, pattern);
+		IPattern result = new Pattern(name, columns, pattern);
+		result.getComments().addAll(comments);
+		if (origination != null) {
+			result.setOrigination(origination);
+		}
+		if (coordinates != null) {
+			result.setCoordinates(coordinates);
+		}
+		if (rule != null) {
+			result.setRule(rule);
+		}
+		return result;
 	}
 
 	private static int decodeRleRow(int columns, int row, String rle, int[] pattern) throws InvalidRLEFormatException {

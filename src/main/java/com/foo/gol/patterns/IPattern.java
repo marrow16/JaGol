@@ -23,4 +23,9 @@ public interface IPattern {
 	void setCoordinates(String coordinates);
 	IChangeAliveRule getRule();
 	void setRule(IChangeAliveRule rule);
+
+	void rotate90Clockwise();
+	void rotate90AntiClockwise();
+	void flipVertically();
+	void flipHorizontally();
 }

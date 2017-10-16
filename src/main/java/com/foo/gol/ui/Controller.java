@@ -63,6 +63,8 @@ public class Controller {
 
 	private AnimationSaver animationSaver;
 
+	private ContextMenu patternContextMenu;
+
 	@FXML
 	private SplitPane mainPane;
 	@FXML
@@ -138,6 +140,8 @@ public class Controller {
 		gameConfig = GameConfig.load();
 		populateRuleCombo();
 		syncControlsToSettings();
+
+		buildPatternContextMenu();
 
 		canvasGraphicsContext = canvas.getGraphicsContext2D();
 		animationSaver = new AnimationSaver(mainPane.getScene().getWindow(), canvas, (int)gameConfig.getGenerationDelay());
@@ -215,6 +219,44 @@ public class Controller {
 		inActiveCellColorPicker.setValue(gameConfig.getCellInactiveColor());
 		drawGridCheckbox.setSelected(gameConfig.getCellSpace() != 0);
 		gridColorPicker.setValue(gameConfig.getCellGridColor());
+	}
+
+	private void buildPatternContextMenu() {
+		patternContextMenu = new ContextMenu();
+		MenuItem editMenuItem = new MenuItem("Edit...");
+		editMenuItem.setDisable(true); // not yet supported
+		SeparatorMenuItem separatorMenuItem = new SeparatorMenuItem();
+		MenuItem flipHorizontalMenuItem = new MenuItem("Flip horizontal");
+		flipHorizontalMenuItem.setOnAction(event -> {
+			if (selectedPattern != null) {
+				selectedPattern.getPattern().flipHorizontally();
+				selectedPattern.redrawPattern(gameConfig);
+			}
+		});
+		MenuItem flipVerticalMenuItem = new MenuItem("Flip vertical");
+		flipVerticalMenuItem.setOnAction(event -> {
+			if (selectedPattern != null) {
+				selectedPattern.getPattern().flipVertically();
+				selectedPattern.redrawPattern(gameConfig);
+			}
+		});
+		MenuItem rotate90ClockwiseMenuItem = new MenuItem("Rotate 90\u00B0 clockwise");
+		rotate90ClockwiseMenuItem.setOnAction(event -> {
+			if (selectedPattern != null) {
+				selectedPattern.getPattern().rotate90Clockwise();
+				selectedPattern.redrawPattern(gameConfig);
+			}
+		});
+		MenuItem rotate90AntiClockwiseMenuItem = new MenuItem("Rotate 90\u00B0 anti clockwise");
+		rotate90AntiClockwiseMenuItem.setOnAction(event -> {
+			if (selectedPattern != null) {
+				selectedPattern.getPattern().rotate90AntiClockwise();
+				selectedPattern.redrawPattern(gameConfig);
+			}
+		});
+		patternContextMenu.getItems().addAll(editMenuItem, separatorMenuItem,
+				flipHorizontalMenuItem, flipVerticalMenuItem,
+				rotate90ClockwiseMenuItem, rotate90AntiClockwiseMenuItem);
 	}
 
 	private void populateRuleCombo() {
@@ -325,31 +367,21 @@ public class Controller {
 	}
 
 	private void rebuildPatterns() {
-		List<IPattern> patterns = new ArrayList<>();
 		for (Node node: patternsContainer.getChildren()) {
 			if (node instanceof PatternVBox) {
-				patterns.add(((PatternVBox)node).getPattern());
+				((PatternVBox)node).redrawPattern(gameConfig);
 			}
-		}
-		selectedPattern = null;
-		draggingPattern = null;
-		patternsContainer.getChildren().clear();
-		for (IPattern pattern: patterns) {
-			PatternVBox vbox = pattern.generateDisplay(gameConfig);
-			patternsContainer.getChildren().add(vbox);
-			makePatternVBoxInteractive(vbox);
 		}
 	}
 
-	private void makePatternVBoxInteractive(PatternVBox patternVBox) {
+	private void makePatternVBoxInteractive(final PatternVBox patternVBox) {
 		IPattern pattern = patternVBox.getPattern();
+		patternVBox.setFocusTraversable(true);
+		patternVBox.focusedProperty().addListener((observable, oldValue, newValue) -> {
+			setPatternVBoxSelected(patternVBox);
+		});
 		patternVBox.setOnDragDetected(event -> {
-			if (selectedPattern != null && selectedPattern != pattern) {
-				selectedPattern.clearSelectedBorder();
-				selectedPattern = null;
-			}
-			selectedPattern = patternVBox;
-			selectedPattern.showSelectedBorder();
+			setPatternVBoxSelected(patternVBox);
 			if (!running) {
 				Dragboard dragboard = patternVBox.startDragAndDrop(TransferMode.MOVE);
 				patternVBox.prepareForDrag();
@@ -365,12 +397,9 @@ public class Controller {
 			draggingPattern = null;
 		});
 		patternVBox.setOnMouseClicked(event -> {
-			if (selectedPattern != null) {
-				selectedPattern.clearSelectedBorder();
-				selectedPattern = null;
-			}
-			selectedPattern = patternVBox;
-			patternVBox.showSelectedBorder();
+			setPatternVBoxSelected(patternVBox);
+			patternVBox.requestFocus();
+			ensurePatternVisible(patternVBox);
 			if (!running && event.getClickCount() == 2) {
 				board.drawPattern(currentCellPosition.getRow(), currentCellPosition.getColumn(), pattern);
 				redrawBoardArea(currentCellPosition.getRow(), currentCellPosition.getColumn(), pattern.rows(), pattern.columns());
@@ -378,6 +407,63 @@ public class Controller {
 				canvas.requestFocus();
 			}
 		});
+		patternVBox.setOnMousePressed(event -> {
+			patternVBox.requestFocus();
+			if (event.isSecondaryButtonDown()) {
+				setPatternVBoxSelected(patternVBox);
+				patternContextMenu.show(patternVBox, event.getScreenX(), event.getScreenY());
+			}
+		});
+		patternVBox.setOnKeyPressed(event -> {
+			switch (event.getCode()) {
+				case UP:
+					setPatternVBoxSelectedUpDown(patternVBox, -1);
+					event.consume();
+					ensurePatternVisible(selectedPattern);
+					break;
+				case DOWN:
+					setPatternVBoxSelectedUpDown(patternVBox, 1);
+					event.consume();
+					ensurePatternVisible(selectedPattern);
+					break;
+			}
+		});
+	}
+
+	private void setPatternVBoxSelected(PatternVBox newSelectedPattern) {
+		if (selectedPattern != null && selectedPattern != newSelectedPattern) {
+			selectedPattern.clearSelectedBorder();
+			selectedPattern = null;
+		}
+		if (newSelectedPattern != null) {
+			selectedPattern = newSelectedPattern;
+			selectedPattern.showSelectedBorder();
+		}
+	}
+
+	private void setPatternVBoxSelectedUpDown(PatternVBox patternVBox, int direction) {
+		List<Node> items = patternsContainer.getChildren();
+		int index = items.indexOf(patternVBox);
+		if (index >= 0) {
+			index += direction;
+			if (index >= 0 && index < items.size()) {
+				items.get(index).requestFocus();
+			}
+		}
+	}
+
+	private void ensurePatternVisible(PatternVBox patternVBox) {
+		// TODO - this isn't really working correctly
+		/*
+		Bounds patternBoxBounds = patternVBox.getBoundsInParent();
+		double visibleTop = patternsScrollPane.getVvalue() * patternsContainer.getHeight();
+		double visibleBottom = visibleTop + patternsScrollPane.getHeight();
+		if (patternBoxBounds.getMinY() < visibleTop) {
+			patternsScrollPane.setVvalue(patternBoxBounds.getMinY() / patternsContainer.getHeight());
+		} else if (patternBoxBounds.getMaxY() > visibleBottom) {
+			patternsScrollPane.setVvalue(patternBoxBounds.getMaxY() / patternsContainer.getHeight());
+		}
+		*/
 	}
 
 	private void run() {
@@ -539,7 +625,7 @@ public class Controller {
 			if (lastPatternVbox != null) {
 				accordion.setExpandedPane(accordionPatterns);
 				patternsScrollPane.setHvalue(0);
-				patternsScrollPane.setVvalue(patternsScrollPane.getVmax() + 1000);
+				patternsScrollPane.setVvalue(1.0d);
 				if (selectedPattern != null) {
 					selectedPattern.clearSelectedBorder();
 					selectedPattern = null;
@@ -724,11 +810,11 @@ public class Controller {
 	public void onRuleComboChanged(ActionEvent actionEvent) {
 		if (!running) {
 			String selectedValue = ruleCombo.getValue();
-			//boolean isCustom = ChangeAliveRuleFactory.CUSTOM_RULE_LABEL.equals(selectedValue);
 			IChangeAliveRule newRule = ChangeAliveRuleFactory.createFromLabel(selectedValue);
 			if (newRule == null) {
 				newRule = new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue());
 			}
+			gameConfig.setChangeAliveRule(newRule);
 			generationController.setChangeAliveRule(newRule);
 			alivesSurviveTextField.setDisable(!newRule.isCustom());
 			deadsBornTextField.setDisable(!newRule.isCustom());

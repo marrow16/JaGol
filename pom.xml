@@ -6,7 +6,7 @@
 
 	<groupId>com.foo</groupId>
 	<artifactId>gol</artifactId>
-	<version>1.6-SNAPSHOT</version>
+	<version>1.7-SNAPSHOT</version>
 
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->

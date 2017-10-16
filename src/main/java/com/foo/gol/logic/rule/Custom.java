@@ -14,6 +14,22 @@ public class Custom implements IChangeAliveRule {
 	private String bornString = "";
 	private String rleString = "";
 
+	public static Custom createFromRuleString(String rule) {
+		Custom result = new Custom(rule);
+		String[] parts = rule.split("/");
+		if (parts.length == 2) {
+			if (!parts[0].startsWith("B") && !parts[0].startsWith("S") && !parts[1].startsWith("B") && !parts[1].startsWith("S")) {
+				// it encocded with 'B' and 'S' prefixes
+				// so the first part is S and the second part is B...
+				result.setRleString("B" + parts[1] + "/S" + parts[0]);
+				result.setType("B" + parts[1] + "/S" + parts[0]);
+			} else {
+				result.setRleString(rule);
+			}
+		}
+		return result;
+	}
+
 	public Custom(String type) {
 		this.type = type;
 	}
