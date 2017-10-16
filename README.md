@@ -1,4 +1,4 @@
-# Conway's Game Of Life
+# JaGol (Conway's Game Of Life)
 
 Written for fun in Java using JavaFX
 

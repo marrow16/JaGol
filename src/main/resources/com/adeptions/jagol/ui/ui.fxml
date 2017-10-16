@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory?>
+<SplitPane fx:id="mainPane" dividerPositions="0.75" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="618.0" prefWidth="807.0" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adeptions.jagol.ui.Controller">
+	<items>
+		<ScrollPane fx:id="scrollPane" prefHeight="200.0" prefWidth="200.0">
+			<content>
+				<Canvas fx:id="canvas" focusTraversable="true" onDragDropped="#onCanvasDragDropped" onDragOver="#onCanvasDragOver" onKeyPressed="#onCanvasKeyPressed" onKeyTyped="#onCanvasKeyTyped" onMouseDragged="#onCanvasDragged" onMousePressed="#onCanvasMousePressed" onMouseReleased="#onCanvasMouseReleased" />
+			</content>
+		</ScrollPane>
+		<VBox prefHeight="398.0" prefWidth="234.0">
+			<children>
+				<BorderPane prefHeight="44.0" prefWidth="262.0">
+					<left>
+						<Button fx:id="playButton" mnemonicParsing="false" onAction="#onPlayButtonClick" text="Play" BorderPane.alignment="CENTER" />
+					</left>
+					<center>
+						<Button fx:id="stepButton" mnemonicParsing="false" onAction="#onStepButtonClick" text="Step" BorderPane.alignment="CENTER" />
+					</center>
+					<right>
+						<Button fx:id="stopButton" mnemonicParsing="false" onAction="#onStopButtonClick" text="Stop" BorderPane.alignment="CENTER" />
+					</right>
+					<VBox.margin>
+						<Insets top="4.0" />
+					</VBox.margin>
+					<padding>
+						<Insets bottom="4.0" left="8.0" right="8.0" />
+					</padding>
+					<bottom>
+						<GridPane>
+							<columnConstraints>
+								<ColumnConstraints hgrow="SOMETIMES" minWidth="116.0" prefWidth="116.0" />
+								<ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+							</columnConstraints>
+							<rowConstraints>
+								<RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+							</rowConstraints>
+							<children>
+								<CheckBox fx:id="saveAnimationCheckbox" mnemonicParsing="false" onAction="#onSaveAnimationCheckboxChanged" text="Save animation" />
+								<TextField fx:id="saveAnimationToTextField" disable="true" prefHeight="25.0" prefWidth="116.0" visible="false" GridPane.columnIndex="1" />
+							</children>
+							<BorderPane.margin>
+								<Insets top="6.0" />
+							</BorderPane.margin>
+						</GridPane>
+					</bottom>
+				</BorderPane>
+				<BorderPane prefHeight="44.0" prefWidth="262.0">
+					<top>
+						<Separator prefWidth="200.0" BorderPane.alignment="CENTER">
+							<BorderPane.margin>
+								<Insets bottom="4.0" />
+							</BorderPane.margin>
+						</Separator>
+					</top>
+					<left>
+						<Button fx:id="randomizeButton" mnemonicParsing="false" onAction="#onRandomizeButtonClick" text="Randomize" BorderPane.alignment="CENTER" />
+					</left>
+					<right>
+						<Button fx:id="clearButton" mnemonicParsing="false" onAction="#onClearButtonClick" text="Clear" BorderPane.alignment="CENTER" />
+					</right>
+					<VBox.margin>
+						<Insets top="4.0" />
+					</VBox.margin>
+					<padding>
+						<Insets bottom="4.0" left="8.0" right="8.0" />
+					</padding>
+				</BorderPane>
+				<Accordion fx:id="accordion" prefHeight="356.0" prefWidth="262.0" VBox.vgrow="ALWAYS">
+					<panes>
+						<TitledPane animated="false" text="Life Controls">
+							<content>
+								<GridPane fx:id="lifeControlsGrid" hgap="4.0">
+									<columnConstraints>
+										<ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="120.0" />
+										<ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+									</columnConstraints>
+									<rowConstraints>
+										<RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
+										<RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
+										<RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints vgrow="ALWAYS" />
+									</rowConstraints>
+									<children>
+										<Label prefHeight="17.0" text="Board sizing:-" GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.rowIndex="0">
+											<GridPane.margin>
+												<Insets left="4.0" top="4.0" />
+											</GridPane.margin>
+										</Label>
+										<Label prefHeight="17.0" text="Width: " GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+										<Label prefHeight="17.0" text="Height: " GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+										<Spinner fx:id="boardWidthSpinner" editable="true" prefWidth="75.0" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+										<Spinner fx:id="boardHeightSpinner" editable="true" prefWidth="75.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+										<Separator prefWidth="200.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="3">
+											<GridPane.margin>
+												<Insets left="4.0" right="4.0" />
+											</GridPane.margin>
+										</Separator>
+										<Label prefHeight="17.0" text="Generation delay (ms)" GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.rowIndex="4">
+											<GridPane.margin>
+												<Insets left="4.0" />
+											</GridPane.margin>
+										</Label>
+										<Slider fx:id="animationSpeedSlider" blockIncrement="100.0" majorTickUnit="50.0" max="1000.0" min="50.0" minorTickCount="0" prefWidth="216.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="100.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="5">
+											<GridPane.margin>
+												<Insets left="16.0" right="16.0" top="4.0" />
+											</GridPane.margin>
+										</Slider>
+										<Separator prefWidth="200.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="6">
+											<GridPane.margin>
+												<Insets left="4.0" right="4.0" />
+											</GridPane.margin>
+										</Separator>
+										<Label prefHeight="17.0" text="Randomization density (%)" GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.rowIndex="7">
+											<GridPane.margin>
+												<Insets left="4.0" />
+											</GridPane.margin>
+										</Label>
+										<Slider fx:id="randomDensitySlider" showTickLabels="true" showTickMarks="true" value="30.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="8">
+											<GridPane.margin>
+												<Insets left="16.0" right="16.0" top="4.0" />
+											</GridPane.margin>
+										</Slider>
+										<Separator prefWidth="200.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="9">
+											<GridPane.margin>
+												<Insets left="4.0" right="4.0" />
+											</GridPane.margin>
+										</Separator>
+										<Label prefHeight="17.0" text="Generation rule" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="10">
+											<GridPane.margin>
+												<Insets left="4.0" />
+											</GridPane.margin>
+										</Label>
+										<ComboBox fx:id="ruleCombo" onAction="#onRuleComboChanged" prefHeight="25.0" GridPane.columnIndex="1" GridPane.rowIndex="10">
+											<GridPane.margin>
+												<Insets right="4" />
+											</GridPane.margin>
+										</ComboBox>
+										<Label prefHeight="17.0" text="Alives survive with:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="11" />
+										<Label prefHeight="17.0" text="Deads born with:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="12" />
+										<TextField fx:id="alivesSurviveTextField" disable="true" onKeyTyped="#onRuleTextFieldKeyTyped" GridPane.columnIndex="1" GridPane.rowIndex="11">
+											<GridPane.margin>
+												<Insets right="4" />
+											</GridPane.margin>
+										</TextField>
+										<TextField fx:id="deadsBornTextField" disable="true" onKeyTyped="#onRuleTextFieldKeyTyped" GridPane.columnIndex="1" GridPane.rowIndex="12">
+											<GridPane.margin>
+												<Insets right="4" />
+											</GridPane.margin>
+										</TextField>
+										<Separator prefWidth="200.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="13">
+											<GridPane.margin>
+												<Insets left="4.0" right="4.0" />
+											</GridPane.margin>
+										</Separator>
+										<Label prefHeight="17.0" text="Wrapping:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="14" />
+										<ComboBox fx:id="wrappingCombo" onAction="#onWrappingChanged" prefHeight="25.0" GridPane.columnIndex="1" GridPane.rowIndex="14">
+											<items>
+												<FXCollections fx:factory="observableArrayList">
+													<String fx:value="None" />
+													<String fx:value="Horizontal" />
+													<String fx:value="Vertical" />
+													<String fx:value="Both" />
+												</FXCollections>
+											</items>
+											<value>
+												<String fx:value="None" />
+											</value>
+											<GridPane.margin>
+												<Insets right="4" />
+											</GridPane.margin>
+										</ComboBox>
+										<CheckBox fx:id="deadCellEdgesCheckbox" text="Dead cell edges" onAction="#onDeadCellEdgesCheckboxChanged" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="15" selected="false"/>
+
+									</children>
+									<padding>
+										<Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+									</padding>
+								</GridPane>
+							</content>
+						</TitledPane>
+						<TitledPane animated="false" expanded="false" text="Board Drawing">
+							<content>
+								<GridPane fx:id="boardDrawingControlsGrid" hgap="4.0">
+									<columnConstraints>
+										<ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="120.0" />
+										<ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+									</columnConstraints>
+									<rowConstraints>
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints vgrow="ALWAYS" />
+									</rowConstraints>
+									<children>
+										<Label text="Cell size (px): " GridPane.halignment="RIGHT" />
+										<Label text="Active cell color: " GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+										<Label text="Inactive cell color: " GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+										<ColorPicker fx:id="activeCellColorPicker" onAction="#onActiveCellColorPickerChange" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+										<ColorPicker fx:id="inActiveCellColorPicker" onAction="#OnInActiveCellColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+										<Spinner fx:id="cellSizeSpinner" prefWidth="75.0" GridPane.columnIndex="1" />
+										<CheckBox fx:id="drawGridCheckbox" mnemonicParsing="false" onAction="#onDrawGridCheckboxChange" selected="true" text="Draw grid lines" GridPane.columnSpan="2" GridPane.rowIndex="3">
+											<GridPane.margin>
+												<Insets left="8.0" />
+											</GridPane.margin>
+										</CheckBox>
+										<Label text="Grid line color: " GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
+										<ColorPicker fx:id="gridColorPicker" onAction="#onGridColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+									</children>
+									<padding>
+										<Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+									</padding>
+								</GridPane>
+							</content>
+						</TitledPane>
+						<TitledPane fx:id="accordionPatterns" animated="false" expanded="false" text="Patterns">
+							<content>
+								<ScrollPane fx:id="patternsScrollPane">
+									<content>
+										<VBox fx:id="patternsContainer">
+											<children>
+											</children>
+										</VBox>
+									</content>
+								</ScrollPane>
+							</content>
+						</TitledPane>
+						<TitledPane animated="false" expanded="false" text="Load / Save">
+							<content>
+								<GridPane fx:id="loadSaveControlsGrid">
+									<columnConstraints>
+										<ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="120.0" />
+										<ColumnConstraints hgrow="ALWAYS" minWidth="150.0" />
+									</columnConstraints>
+									<rowConstraints>
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints vgrow="ALWAYS" />
+									</rowConstraints>
+									<children>
+										<Button fx:id="loadPatternButton" mnemonicParsing="false" onAction="#onLoadPatternButtonClicked" text="Load Pattern" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="0">
+											<GridPane.margin>
+												<Insets left="4.0" right="4.0" top="4.0" />
+											</GridPane.margin>
+										</Button>
+										<Button fx:id="enterRlePatternButton" mnemonicParsing="false" onAction="#onEnterRlePatternButtonClicked" text="Enter RLE Pattern" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1">
+											<GridPane.margin>
+												<Insets left="4.0" right="4.0" top="4.0" />
+											</GridPane.margin>
+										</Button>
+									</children>
+									<padding>
+										<Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+									</padding>
+								</GridPane>
+							</content>
+						</TitledPane>
+					</panes>
+				</Accordion>
+			</children>
+		</VBox>
+	</items>
+</SplitPane>
