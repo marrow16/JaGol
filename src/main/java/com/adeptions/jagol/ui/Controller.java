@@ -26,6 +26,7 @@ import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Controller {
@@ -34,7 +35,7 @@ public class Controller {
 		return instance;
 	}
 
-	private final DataFormat patternDragFormat = new DataFormat("com.adeptions.jagol.ui.pattern");
+	private static final DataFormat PATTERN_DRAG_FORMAT = new DataFormat("com.adeptions.jagol.ui.pattern");
 
 	private GameConfig gameConfig;
 	private IBoard board;
@@ -44,8 +45,10 @@ public class Controller {
 
 	private boolean running = false;
 
-	private PatternVBox draggingPattern = null;
 	private PatternVBox selectedPattern = null;
+
+	private IPattern draggingPattern = null;
+	private GridPosition draggingOverlayPosition = null;
 
 	private FileChooser fileChooser;
 	private File initialDirectory = new File(".");
@@ -357,7 +360,6 @@ public class Controller {
 
 	private void loadPatterns() {
 		selectedPattern = null;
-		draggingPattern = null;
 		patternsContainer.getChildren().clear();
 		for (IPattern pattern: patternLibrary.getPatterns()) {
 			PatternVBox vbox = pattern.generateDisplay(gameConfig);
@@ -383,13 +385,13 @@ public class Controller {
 		patternVBox.setOnDragDetected(event -> {
 			setPatternVBoxSelected(patternVBox);
 			if (!running) {
-				Dragboard dragboard = patternVBox.startDragAndDrop(TransferMode.MOVE);
+				Dragboard dragboard = patternVBox.startDragAndDrop(TransferMode.COPY_OR_MOVE);
 				patternVBox.prepareForDrag();
 				dragboard.setDragView(patternVBox.snapshot(null, null));
 				ClipboardContent clipboardContent = new ClipboardContent();
-				clipboardContent.put(patternDragFormat, pattern.getName());
+				clipboardContent.put(PATTERN_DRAG_FORMAT, pattern.getName());
 				dragboard.setContent(clipboardContent);
-				draggingPattern = patternVBox;
+				draggingPattern = pattern;
 				selectedPattern.showSelectedBorder();
 			}
 		});
@@ -573,65 +575,116 @@ public class Controller {
 
 	@FXML
 	public void onCanvasDragOver(DragEvent dragEvent) {
-		Dragboard db = dragEvent.getDragboard();
-		if (db.hasContent(patternDragFormat) && draggingPattern != null) {
-			dragEvent.acceptTransferModes(TransferMode.MOVE);
-		} else if (db.hasContent(DataFormat.PLAIN_TEXT)) {
+		if (!running && draggingPattern != null) {
 			dragEvent.acceptTransferModes(TransferMode.COPY);
+			drawDraggingOverlay(GridPosition.fromXYCoordinate(gameConfig, dragEvent.getX(), dragEvent.getY()));
+		}
+/*
+		Dragboard db = dragEvent.getDragboard();
+		if (db.hasContent(PATTERN_DRAG_FORMAT) || db.hasContent(DataFormat.PLAIN_TEXT)) {
+			dragEvent.acceptTransferModes(TransferMode.COPY);
+		}
+*/
+	}
+
+	@FXML
+	public void onCanvasDragEntered(DragEvent dragEvent) {
+		draggingOverlayPosition = null;
+		if (!running) {
+			Dragboard db = dragEvent.getDragboard();
+			if (!db.hasContent(PATTERN_DRAG_FORMAT) && db.hasContent(DataFormat.PLAIN_TEXT)) {
+				draggingPattern = null;
+				// attempt to build the dragging pattern...
+				String draggingString = db.getString().trim();
+				if (draggingString.startsWith(".") || draggingString.startsWith("O") || draggingString.startsWith("!")) {
+					// possibly a plain text pattern encoding...
+					try {
+						draggingPattern = PatternPlainTextLoader.load(null, draggingString);
+					} catch (InvalidPlainTextFormatException e) {
+						//e.printStackTrace();
+					}
+				} else if (draggingString.startsWith("#")) {
+					// possibly an rle encoded string...
+					try {
+						draggingPattern = PatternRLELoader.load(null, draggingString);
+					} catch (InvalidRLEFormatException e) {
+						//e.printStackTrace();
+					}
+				}
+				if (draggingPattern == null) {
+					// not a pattern format that we could recognize - so just use the string as a pattern...
+					String[] lines = draggingString.split("\n");
+					List<IPattern> linePatterns = new ArrayList<>();
+					int maxWidth = 0;
+					for (String line : lines) {
+						IPattern linePattern = AlphabetPatterns.stringToPattern(line);
+						maxWidth = Math.max(maxWidth, linePattern.columns());
+						linePatterns.add(linePattern);
+					}
+					draggingPattern = new Pattern(null, (linePatterns.size() * AlphabetPatterns.CHAR_HEIGHT), maxWidth);
+					int atRow = 0;
+					for (IPattern linePattern : linePatterns) {
+						draggingPattern.drawPattern(linePattern, atRow, 0);
+						atRow += AlphabetPatterns.CHAR_HEIGHT;
+					}
+				}
+			}
+			if (draggingPattern != null) {
+				drawDraggingOverlay(GridPosition.fromXYCoordinate(gameConfig, dragEvent.getX(), dragEvent.getY()));
+			}
+		}
+	}
+
+	public void onCanvasDragExited(DragEvent dragEvent) {
+		if (!running) {
+			if (!dragEvent.isDropCompleted()) {
+				clearDraggingOverlay();
+			}
+			draggingPattern = null;
 		}
 	}
 
 	@FXML
 	public void onCanvasDragDropped(DragEvent dragEvent) {
-		if (!running) {
+		if (!running && draggingPattern != null) {
+			dragEvent.setDropCompleted(true);
+			clearDraggingOverlay();
 			Dragboard db = dragEvent.getDragboard();
 			GridPosition position = GridPosition.fromXYCoordinate(gameConfig, dragEvent.getX(), dragEvent.getY());
-			if (db.hasContent(patternDragFormat) && draggingPattern != null) {
-				dragEvent.setDropCompleted(true);
-				IPattern pattern = draggingPattern.getPattern();
-				board.drawPattern(position.getRow(), position.getColumn(), pattern);
-				redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
-				animationSaver.step();
-				changeCurrentCellPosition(position);
-				canvas.requestFocus();
-			} else if (db.hasContent(DataFormat.PLAIN_TEXT)) {
-				// see what the string smells like...
-				String droppedString = db.getString().trim();
-				if (droppedString.startsWith(".") || droppedString.startsWith("O") || droppedString.startsWith("!")) {
-					// possibly a plain text pattern encoding...
-					try {
-						IPattern pattern = PatternPlainTextLoader.load(null, droppedString);
-						board.drawPattern(position.getRow(), position.getColumn(), pattern);
-						redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
-					} catch (InvalidPlainTextFormatException e) {
-						e.printStackTrace();
-					}
-				} else if (droppedString.startsWith("#")) {
-					// possibly an rle pattern encoding...
-					try {
-						IPattern pattern = PatternRLELoader.load(null, droppedString);
-						board.drawPattern(position.getRow(), position.getColumn(), pattern);
-						redrawBoardArea(position.getRow(), position.getColumn(), pattern.rows(), pattern.columns());
-					} catch (InvalidRLEFormatException e) {
-						e.printStackTrace();
-					}
-				} else {
-					// just print out text...
-					String[] lines = droppedString.split("\n");
-					int atRow = position.getRow();
-					int height = 0;
-					int width = 0;
-					for (String line : lines) {
-						IPattern linePattern = AlphabetPatterns.stringToPattern(line);
-						height += AlphabetPatterns.CHAR_HEIGHT;
-						width = Math.max(width, linePattern.columns());
-						board.drawPattern(atRow, position.getColumn(), linePattern);
-						atRow += AlphabetPatterns.CHAR_HEIGHT;
-						if (atRow >= gameConfig.getRows()) {
-							break;
-						}
-					}
-					redrawBoardArea(position.getRow(), position.getColumn(), height, width);
+			board.drawPattern(position.getRow(), position.getColumn(), draggingPattern);
+			redrawBoardArea(position.getRow(), position.getColumn(), draggingPattern.rows(), draggingPattern.columns());
+			animationSaver.step();
+			changeCurrentCellPosition(position);
+			canvas.requestFocus();
+		}
+	}
+
+	private void clearDraggingOverlay() {
+		if (draggingPattern != null && draggingOverlayPosition != null) {
+			redrawBoardArea(draggingOverlayPosition.getRow(), draggingOverlayPosition.getColumn(), draggingPattern.rows(), draggingPattern.columns());
+		}
+	}
+
+	private void drawDraggingOverlay(GridPosition position) {
+		if (draggingOverlayPosition == null || !draggingOverlayPosition.equals(position)) {
+			clearDraggingOverlay();
+			draggingOverlayPosition = position;
+			int cellSize = gameConfig.getCellSize();
+			int cellSpacing = cellSize + gameConfig.getCellSpace();
+			Color aliveColor = gameConfig.getCellActiveColor();
+			Color deadColor = gameConfig.getCellInactiveColor();
+			if (deadColor.getBrightness() > 0.5d) {
+				deadColor = deadColor.deriveColor(0, 1.0, 0.9, 1.0);
+				aliveColor = aliveColor.deriveColor(0, 1.0, 1.0 / 0.9, 1.0);
+			} else {
+				deadColor = deadColor.deriveColor(0, 1.0, 1.0 / 0.9, 1.0);
+				aliveColor = aliveColor.deriveColor(0, 1.0, 0.9, 1.0);
+			}
+			for (int row = 0; row < draggingPattern.rows() && (row + position.getRow()) < gameConfig.getRows(); row++) {
+				for (int column = 0; column < draggingPattern.columns() && (column + position.getColumn()) < gameConfig.getColumns(); column++) {
+					ICell cell = draggingPattern.cell(row, column);
+					canvasGraphicsContext.setFill(cell.isAlive() ? aliveColor : deadColor);
+					canvasGraphicsContext.fillRect(((column + position.getColumn()) * cellSpacing) + 1, ((row + position.getRow()) * cellSpacing) + 1, cellSize, cellSize);
 				}
 			}
 		}

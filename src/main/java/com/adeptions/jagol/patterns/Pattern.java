@@ -21,8 +21,8 @@ public class Pattern implements IPattern {
 
 	public Pattern(String name, int columns, int[] pattern) {
 		this.name = name;
-		if (columns < 0) {
-			throw new IllegalArgumentException("Pattern cannot have zero columns");
+		if (columns < 1) {
+			throw new IllegalArgumentException("Pattern cannot have columns less than one");
 		}
 		this.columns = columns;
 		if (pattern.length < this.columns || (pattern.length % this.columns) != 0) {
@@ -30,10 +30,25 @@ public class Pattern implements IPattern {
 		}
 		this.columns = columns;
 		this.rows = pattern.length / this.columns;
-		cells = new ArrayList<>();
+		cells = new ArrayList<>(rows * columns);
 		for (int row = 0; row < this.rows; row++) {
 			for (int column = 0; column < this.columns; column++) {
 				cells.add(Cell.createCell(row, column, pattern[(row * this.columns) + column] != 0));
+			}
+		}
+	}
+
+	public Pattern(String name, int rows, int columns) {
+		if (columns < 1 || rows < 1) {
+			throw new IllegalArgumentException("Pattern cannot have rows/columns less than one");
+		}
+		this.name = name;
+		this.rows = rows;
+		this.columns = columns;
+		cells = new ArrayList<>(rows * columns);
+		for (int row = 0; row < this.rows; row++) {
+			for (int column = 0; column < this.columns; column++) {
+				cells.add(Cell.createCell(row, column));
 			}
 		}
 	}
@@ -159,5 +174,14 @@ public class Pattern implements IPattern {
 			}
 		}
 		cells = newCells;
+	}
+
+	@Override
+	public void drawPattern(IPattern pattern, int atRow, int atColumn) {
+		for (int row = 0; row < pattern.rows() && (atRow + row) < rows; row++) {
+			for (int column = 0; column < pattern.columns() && (atColumn + column) < columns; column++) {
+				cell(atRow + row, atColumn + column).isAlive(pattern.cell(row, column).isAlive());
+			}
+		}
 	}
 }

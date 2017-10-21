@@ -28,4 +28,6 @@ public interface IPattern {
 	void rotate90AntiClockwise();
 	void flipVertically();
 	void flipHorizontally();
+
+	void drawPattern(IPattern pattern, int row, int column);
 }
