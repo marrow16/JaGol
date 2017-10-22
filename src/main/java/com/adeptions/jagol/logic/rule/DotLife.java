@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class DotLife extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "DotLife";
+	public static final String RULE = "B3/S023";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 0 || adjacentsAlive == 2 || adjacentsAlive == 3);
 		} else {
@@ -29,7 +30,7 @@ public class DotLife extends AbstractPredefinedRule implements IChangeAliveRule 
 
 	@Override
 	public String getRleString() {
-		return "B3/S023";
+		return RULE;
 	}
 
 	@Override

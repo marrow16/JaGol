@@ -4,6 +4,7 @@ import com.adeptions.jagol.logic.ICell;
 
 public class StandardConways extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Standard";
+	public static final String RULE = "B3/S23";
 
 	@Override
 	public boolean evaluate(ICell cell) {
@@ -31,7 +32,7 @@ public class StandardConways extends AbstractPredefinedRule implements IChangeAl
 
 	@Override
 	public String getRleString() {
-		return "B3/S23";
+		return RULE;
 	}
 
 	@Override

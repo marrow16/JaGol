@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class TwoXTwo extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "2X2";
+	public static final String RULE = "B36/S125";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 1 || adjacentsAlive == 2 || adjacentsAlive == 5);
 		} else {
@@ -29,7 +30,7 @@ public class TwoXTwo extends AbstractPredefinedRule implements IChangeAliveRule 
 
 	@Override
 	public String getRleString() {
-		return "B36/S125";
+		return RULE;
 	}
 
 	@Override

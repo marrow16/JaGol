@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class Diamoeba extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Diamoeba";
+	public static final String RULE = "B35678/S5678";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 5 || adjacentsAlive == 6 || adjacentsAlive == 7 || adjacentsAlive == 8);
 		} else {
@@ -29,7 +30,7 @@ public class Diamoeba extends AbstractPredefinedRule implements IChangeAliveRule
 
 	@Override
 	public String getRleString() {
-		return "B35678/S5678";
+		return RULE;
 	}
 
 	@Override

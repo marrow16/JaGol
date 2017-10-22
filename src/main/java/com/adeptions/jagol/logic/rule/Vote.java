@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class Vote extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Vote";
+	public static final String RULE = "B5678/S45678";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 4 || adjacentsAlive == 5 || adjacentsAlive == 6 || adjacentsAlive == 7 || adjacentsAlive == 8);
 		} else {
@@ -29,7 +30,7 @@ public class Vote extends AbstractPredefinedRule implements IChangeAliveRule {
 
 	@Override
 	public String getRleString() {
-		return "B5678/S45678";
+		return RULE;
 	}
 
 	@Override

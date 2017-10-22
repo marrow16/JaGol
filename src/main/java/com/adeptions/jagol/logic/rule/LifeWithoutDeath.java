@@ -4,6 +4,7 @@ import com.adeptions.jagol.logic.ICell;
 
 public class LifeWithoutDeath extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Life without death";
+	public static final String RULE = "B3/S012345678";
 
 	@Override
 	public boolean evaluate(ICell cell) {
@@ -27,7 +28,7 @@ public class LifeWithoutDeath extends AbstractPredefinedRule implements IChangeA
 
 	@Override
 	public String getRleString() {
-		return "B3/S012345678";
+		return RULE;
 	}
 
 	@Override

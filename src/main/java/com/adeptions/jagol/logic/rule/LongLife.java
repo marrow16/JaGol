@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class LongLife extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Long Life";
+	public static final String RULE = "B345/S5";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = adjacentsAlive != 5;
 		} else {
@@ -29,7 +30,7 @@ public class LongLife extends AbstractPredefinedRule implements IChangeAliveRule
 
 	@Override
 	public String getRleString() {
-		return "B345/S5";
+		return RULE;
 	}
 
 	@Override

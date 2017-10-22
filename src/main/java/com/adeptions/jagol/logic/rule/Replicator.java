@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class Replicator extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Replicator";
+	public static final String RULE = "B1357/S1357";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 1 || adjacentsAlive == 3 || adjacentsAlive == 5 || adjacentsAlive == 7);
 		} else {
@@ -29,7 +30,7 @@ public class Replicator extends AbstractPredefinedRule implements IChangeAliveRu
 
 	@Override
 	public String getRleString() {
-		return "B1357/S1357";
+		return RULE;
 	}
 
 	@Override

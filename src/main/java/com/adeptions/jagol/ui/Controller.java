@@ -44,6 +44,7 @@ public class Controller {
 	private PatternLibrary patternLibrary;
 
 	private boolean running = false;
+	private boolean ruleChanging = false;
 
 	private PatternVBox selectedPattern = null;
 
@@ -112,6 +113,8 @@ public class Controller {
 	@FXML
 	private ComboBox<String> ruleCombo;
 	@FXML
+	private Spinner permutationSpinner;
+	@FXML
 	private ComboBox<String> wrappingCombo;
 	@FXML
 	private CheckBox deadCellEdgesCheckbox;
@@ -140,6 +143,7 @@ public class Controller {
 
 	public void shown() {
 		gameConfig = GameConfig.load();
+		permutationSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, ChangeAliveRuleFactory.getPermutationsCount()));
 		populateRuleCombo();
 		syncControlsToSettings();
 
@@ -170,17 +174,77 @@ public class Controller {
 			drawBoard();
 			rebuildPatterns();
 		});
+		permutationSpinner.getValueFactory().valueProperty().addListener((observable, oldValue, newValue) -> {
+			if (!running && !ruleChanging) {
+				Integer newIntValue = (Integer)newValue;
+				if (newValue == null || newIntValue.compareTo(0) < 0) {
+					newIntValue = 0;
+					permutationSpinner.getValueFactory().setValue(0);
+				} else if (newIntValue.compareTo(ChangeAliveRuleFactory.getPermutationsCount()) >= 0) {
+					newIntValue = ChangeAliveRuleFactory.getPermutationsCount();
+					permutationSpinner.getValueFactory().setValue(ChangeAliveRuleFactory.getPermutationsCount());
+				}
+				ruleChange(ChangeAliveRuleFactory.getPermutationRule(newIntValue));
+			}
+		});
+		permutationSpinner.getEditor().setOnKeyPressed(event -> {
+			if (!running && !ruleChanging) {
+				Integer currentValue = (Integer) permutationSpinner.getValue();
+				boolean changed = false;
+				switch (event.getCode()) {
+					case UP:
+						if (currentValue < (ChangeAliveRuleFactory.getPermutationsCount() - 1)) {
+							changed = true;
+							currentValue++;
+						}
+						break;
+					case DOWN:
+						if (currentValue > 0) {
+							changed = true;
+							currentValue--;
+						}
+						break;
+					case PAGE_UP:
+						changed = true;
+						currentValue = Math.min(ChangeAliveRuleFactory.getPermutationsCount(), currentValue + 100);
+						break;
+					case PAGE_DOWN:
+						changed = true;
+						currentValue = Math.max(0, currentValue - 100);
+						break;
+					case HOME:
+						if (event.isControlDown()) {
+							changed = true;
+							currentValue = 0;
+						}
+						break;
+					case END:
+						if (event.isControlDown()) {
+							changed = true;
+							currentValue = ChangeAliveRuleFactory.getPermutationsCount() - 1;
+						}
+						break;
+				}
+				if (changed) {
+					event.consume();
+					permutationSpinner.getValueFactory().setValue(currentValue);
+				}
+			}
+		});
+		alivesSurviveTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+			if (!running && !ruleChanging) {
+				ruleChange(new Custom(newValue, deadsBornTextField.textProperty().getValue()));
+			}
+		});
+		deadsBornTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+			if (!running && !ruleChanging) {
+				ruleChange(new Custom(alivesSurviveTextField.textProperty().getValue(), newValue));
+			}
+		});
 		activeCellColorPicker.setValue(gameConfig.getCellActiveColor());
 		inActiveCellColorPicker.setValue(gameConfig.getCellInactiveColor());
 		drawGridCheckbox.setSelected(gameConfig.getCellSpace() > 0);
 		gridColorPicker.setValue(gameConfig.getCellGridColor());
-
-		alivesSurviveTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-			onAlivesSurviveTextFieldChanged();
-		});
-		deadsBornTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-			onDeadsBornTextFieldChanged();
-		});
 
 		focusCellBlinker = new Timeline(new KeyFrame(Duration.millis(500), e -> {
 			focusCellBlink();
@@ -214,9 +278,7 @@ public class Controller {
 		wrappingCombo.setValue(gameConfig.getWrappingMode().getLabel());
 		deadCellEdgesCheckbox.setSelected(gameConfig.isDeadCellEdges());
 		deadCellEdgesCheckbox.setDisable(gameConfig.getWrappingMode() == BoardWrappingMode.BOTH);
-		ruleCombo.setValue(gameConfig.getChangeAliveRule().getType());
-		alivesSurviveTextField.setDisable(!gameConfig.getChangeAliveRule().isCustom());
-		deadsBornTextField.setDisable(!gameConfig.getChangeAliveRule().isCustom());
+		ruleChange(gameConfig.getChangeAliveRule());
 		activeCellColorPicker.setValue(gameConfig.getCellActiveColor());
 		inActiveCellColorPicker.setValue(gameConfig.getCellInactiveColor());
 		drawGridCheckbox.setSelected(gameConfig.getCellSpace() != 0);
@@ -273,6 +335,32 @@ public class Controller {
 		IChangeAliveRule selectedRule = ChangeAliveRuleFactory.createFromLabel(firstLabel);
 		alivesSurviveTextField.textProperty().setValue(selectedRule.getAlivesSurviveString());
 		deadsBornTextField.textProperty().setValue(selectedRule.getDeadsBornString());
+		ruleCombo.valueProperty().addListener((observable, oldValue, newValue) -> {
+			if (!running && !ruleChanging) {
+				IChangeAliveRule newRule = ChangeAliveRuleFactory.createFromLabel(newValue);
+				if (newRule == null) {
+					newRule = new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue());
+				}
+				ruleChange(newRule);
+			}
+		});
+	}
+
+	private void ruleChange(IChangeAliveRule newRule) {
+		gameConfig.setChangeAliveRule(newRule);
+		generationController.setChangeAliveRule(newRule);
+		if (!ruleChanging) {
+			ruleChanging = true;
+			ruleCombo.setValue(gameConfig.getChangeAliveRule().getType());
+			alivesSurviveTextField.textProperty().setValue(gameConfig.getChangeAliveRule().getAlivesSurviveString());
+			deadsBornTextField.textProperty().setValue(gameConfig.getChangeAliveRule().getDeadsBornString());
+			if (permutationSpinner.getValueFactory() != null) {
+				permutationSpinner.getValueFactory().setValue(ChangeAliveRuleFactory.getPermutationIndex(gameConfig.getChangeAliveRule().getRleString()));
+			}
+			alivesSurviveTextField.setDisable(!gameConfig.getChangeAliveRule().isCustom());
+			deadsBornTextField.setDisable(!gameConfig.getChangeAliveRule().isCustom());
+			ruleChanging = false;
+		}
 	}
 
 	private void drawBoardMessage() {
@@ -579,12 +667,6 @@ public class Controller {
 			dragEvent.acceptTransferModes(TransferMode.COPY);
 			drawDraggingOverlay(GridPosition.fromXYCoordinate(gameConfig, dragEvent.getX(), dragEvent.getY()));
 		}
-/*
-		Dragboard db = dragEvent.getDragboard();
-		if (db.hasContent(PATTERN_DRAG_FORMAT) || db.hasContent(DataFormat.PLAIN_TEXT)) {
-			dragEvent.acceptTransferModes(TransferMode.COPY);
-		}
-*/
 	}
 
 	@FXML
@@ -903,34 +985,6 @@ public class Controller {
 		gameConfig.setCellInactiveColor(restoreInactiveColor);
 	}
 
-	public void onRuleComboChanged(ActionEvent actionEvent) {
-		if (!running) {
-			String selectedValue = ruleCombo.getValue();
-			IChangeAliveRule newRule = ChangeAliveRuleFactory.createFromLabel(selectedValue);
-			if (newRule == null) {
-				newRule = new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue());
-			}
-			gameConfig.setChangeAliveRule(newRule);
-			generationController.setChangeAliveRule(newRule);
-			alivesSurviveTextField.setDisable(!newRule.isCustom());
-			deadsBornTextField.setDisable(!newRule.isCustom());
-			alivesSurviveTextField.textProperty().setValue(generationController.getChangeAliveRule().getAlivesSurviveString());
-			deadsBornTextField.textProperty().setValue(generationController.getChangeAliveRule().getDeadsBornString());
-		}
-	}
-
-	public void onAlivesSurviveTextFieldChanged() {
-		if (!running && "Custom".equals(ruleCombo.getValue()) && !alivesSurviveTextField.isDisabled()) {
-			generationController.setChangeAliveRule(new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
-		}
-	}
-
-	public void onDeadsBornTextFieldChanged() {
-		if (!running && "Custom".equals(ruleCombo.getValue()) && !deadsBornTextField.isDisabled()) {
-			generationController.setChangeAliveRule(new Custom(alivesSurviveTextField.textProperty().getValue(), deadsBornTextField.textProperty().getValue()));
-		}
-	}
-
 	public void onRuleTextFieldKeyTyped(KeyEvent keyEvent) {
 		String typedChar = keyEvent.getCharacter();
 		if (!"0123456789 ,".contains(typedChar)) {
@@ -1154,5 +1208,4 @@ public class Controller {
 		}
 		saveAnimationToTextField.setVisible(animationSaver.isSaving());
 	}
-
 }

@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class BlinkerLife extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Blinker Life";
+	public static final String RULE = "B36/S235";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 2 || adjacentsAlive == 3 || adjacentsAlive == 5);
 		} else {
@@ -29,7 +30,7 @@ public class BlinkerLife extends AbstractPredefinedRule implements IChangeAliveR
 
 	@Override
 	public String getRleString() {
-		return "B36/S235";
+		return RULE;
 	}
 
 	@Override

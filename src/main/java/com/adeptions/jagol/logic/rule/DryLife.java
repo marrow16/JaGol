@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class DryLife extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "DryLife";
+	public static final String RULE = "B37/S23";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 2 || adjacentsAlive == 3);
 		} else {
@@ -29,7 +30,7 @@ public class DryLife extends AbstractPredefinedRule implements IChangeAliveRule 
 
 	@Override
 	public String getRleString() {
-		return "B37/S23";
+		return RULE;
 	}
 
 	@Override

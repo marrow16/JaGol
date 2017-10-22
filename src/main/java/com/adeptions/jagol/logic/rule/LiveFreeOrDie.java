@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class LiveFreeOrDie extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Live Free or Die";
+	public static final String RULE = "B2/S0";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = adjacentsAlive != 0;
 		} else {
@@ -29,7 +30,7 @@ public class LiveFreeOrDie extends AbstractPredefinedRule implements IChangeAliv
 
 	@Override
 	public String getRleString() {
-		return "B2/S0";
+		return RULE;
 	}
 
 	@Override

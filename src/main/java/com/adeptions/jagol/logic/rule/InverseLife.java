@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class InverseLife extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "InverseLife";
+	public static final String RULE = "B012345678/S34678";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 3 || adjacentsAlive == 4 || adjacentsAlive == 6 || adjacentsAlive == 7 || adjacentsAlive == 8);
 		} else {
@@ -29,7 +30,7 @@ public class InverseLife extends AbstractPredefinedRule implements IChangeAliveR
 
 	@Override
 	public String getRleString() {
-		return "B012345678/S34678";
+		return RULE;
 	}
 
 	@Override

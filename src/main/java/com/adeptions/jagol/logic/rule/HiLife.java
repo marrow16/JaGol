@@ -4,6 +4,7 @@ import com.adeptions.jagol.logic.ICell;
 
 public class HiLife extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "HiLife";
+	public static final String RULE = "B36/S23";
 
 	@Override
 	public boolean evaluate(ICell cell) {
@@ -31,7 +32,7 @@ public class HiLife extends AbstractPredefinedRule implements IChangeAliveRule {
 
 	@Override
 	public String getRleString() {
-		return "B36/S23";
+		return RULE;
 	}
 
 	@Override

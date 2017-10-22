@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class MazectricWithMice extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Mazectric with Mice";
+	public static final String RULE = "B37/S1234";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 1 || adjacentsAlive == 2 || adjacentsAlive == 3 || adjacentsAlive == 4);
 		} else {
@@ -29,7 +30,7 @@ public class MazectricWithMice extends AbstractPredefinedRule implements IChange
 
 	@Override
 	public String getRleString() {
-		return "B37/S1234";
+		return RULE;
 	}
 
 	@Override

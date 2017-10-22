@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class CorrosionOfConformity extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Corrosion of Conformity";
+	public static final String RULE = "B3/S124";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 1 || adjacentsAlive == 2 || adjacentsAlive == 4);
 		} else {
@@ -29,7 +30,7 @@ public class CorrosionOfConformity extends AbstractPredefinedRule implements ICh
 
 	@Override
 	public String getRleString() {
-		return "B3/S124";
+		return RULE;
 	}
 
 	@Override

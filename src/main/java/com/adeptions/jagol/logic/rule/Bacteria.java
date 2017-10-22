@@ -4,11 +4,12 @@ import com.adeptions.jagol.logic.ICell;
 
 public class Bacteria extends AbstractPredefinedRule implements IChangeAliveRule {
 	public static final String LABEL = "Bacteria";
+	public static final String RULE = "B34/S456";
 
 	@Override
 	public boolean evaluate(ICell cell) {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
-		boolean changes = false;
+		boolean changes;
 		if (cell.isAlive()) {
 			changes = !(adjacentsAlive == 4 || adjacentsAlive == 5 || adjacentsAlive == 6);
 		} else {
@@ -29,7 +30,7 @@ public class Bacteria extends AbstractPredefinedRule implements IChangeAliveRule
 
 	@Override
 	public String getRleString() {
-		return "B34/S456";
+		return RULE;
 	}
 
 	@Override
