@@ -13,7 +13,7 @@ Features:
     + hold `Alt+Ctrl` down to invert cell alive states
   + type something!
 
-![Screen Shot](https://user-images.githubusercontent.com/13290974/31513269-c3568be6-af85-11e7-8e20-450ab6cead37.png)
+![Screen Shot](https://user-images.githubusercontent.com/13290974/31861754-801105a8-b72a-11e7-829a-0e0fa7b29f9a.png)
 
 Example animation output...
 
