@@ -1,7 +1,6 @@
 package com.adeptions.jagol.logic;
 
 import com.adeptions.jagol.patterns.IPattern;
-import com.sun.istack.internal.NotNull;
 
 public class Board implements IBoard {
 	private ICell[][] cells;
@@ -11,11 +10,11 @@ public class Board implements IBoard {
 	private BoardWrappingMode wrappingMode = BoardWrappingMode.NONE;
 	private boolean deadCellEdges = false;
 
-	public Board(int width, int height, BoardWrappingMode wrappingMode, boolean deadCellEdges, @NotNull IGenerationController generationController) {
+	public Board(int width, int height, BoardWrappingMode wrappingMode, boolean deadCellEdges, IGenerationController generationController) {
 		this(width, height, wrappingMode, deadCellEdges, generationController, null);
 	}
 
-	public Board(int width, int height, BoardWrappingMode wrappingMode, boolean deadCellEdges, @NotNull IGenerationController generationController, int[] initialCells) {
+	public Board(int width, int height, BoardWrappingMode wrappingMode, boolean deadCellEdges, IGenerationController generationController, int[] initialCells) {
 		if (generationController == null) {
 			throw new IllegalArgumentException("Generation controller may not be null");
 		}
