@@ -48,7 +48,7 @@ public class Custom implements IChangeAliveRule {
 			if (!count.isEmpty()) {
 				try {
 					val = Integer.parseInt(count);
-					if (val >= 0 && val < 10) {
+					if (val >= 0 && val < 9) {
 						survivesWithCounts.add(val);
 					}
 				} catch (NumberFormatException nfe) {
@@ -60,7 +60,7 @@ public class Custom implements IChangeAliveRule {
 			if (!count.isEmpty()) {
 				try {
 					val = Integer.parseInt(count);
-					if (val >= 0 && val < 10) {
+					if (val >= 0 && val < 9) {
 						bornWithCounts.add(val);
 					}
 				} catch(NumberFormatException nfe){
@@ -111,7 +111,7 @@ public class Custom implements IChangeAliveRule {
 		int adjacentsAlive = IChangeAliveRule.countAdjacentsAlive(cell);
 		if (cell.isAlive()) {
 			changes = survivesWithCounts.size() == 0 || !survivesWithCounts.contains(adjacentsAlive);
-		} else if (bornWithCounts.contains(adjacentsAlive)) {
+		} else if (bornWithCounts.size() == 0 || bornWithCounts.contains(adjacentsAlive)) {
 			changes = true;
 		}
 		return changes;
