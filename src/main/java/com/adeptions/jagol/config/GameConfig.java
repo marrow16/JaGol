@@ -39,7 +39,7 @@ public class GameConfig {
 	}
 
 	/**
-	 * Attempts to load config from [user home dir]/.gol/config.json
+	 * Attempts to load config from [user home dir]/.jagol/config.json
 	 * If the file isn't found - creates a new, default game config
 	 * @return the loaded game config
 	 */
@@ -203,7 +203,36 @@ public class GameConfig {
 		if (userHome == null || userHome.isEmpty()) {
 			userHome = System.getProperty("user.home");
 		}
-		return new File(userHome + File.separator + ".gol");
+		return new File(userHome + File.separator + ".jagol");
 	}
 
+	public static String colorToHtml(Color color) {
+		Double r = color.getRed() * 255d;
+		Double g = color.getGreen() * 255d;
+		Double b = color.getBlue() * 255d;
+		return String.format("#%02x%02x%02x", r.intValue(), g.intValue(), b.intValue());
+	}
+
+	public static Color colorFromHtml(String htmlColor, Color defaultValue) {
+		Color result = defaultValue;
+		if (htmlColor != null && !htmlColor.isEmpty() && htmlColor.startsWith("#")) {
+			Integer r,g,b;
+			try {
+				if (htmlColor.length() == 7) {
+					r = Integer.valueOf(htmlColor.substring(1, 3), 16);
+					g = Integer.valueOf(htmlColor.substring(3, 5), 16);
+					b = Integer.valueOf(htmlColor.substring(5, 7), 16);
+					result = new Color(r.doubleValue() / 255d, g.doubleValue() / 255d, b.doubleValue() / 255d, 1.0d);
+				} else if (htmlColor.length() == 4) {
+					r = Integer.valueOf(htmlColor.substring(1, 2) + htmlColor.substring(1, 2), 16);
+					g = Integer.valueOf(htmlColor.substring(2, 3) + htmlColor.substring(2, 3), 16);
+					b = Integer.valueOf(htmlColor.substring(3, 4) + htmlColor.substring(3, 4), 16);
+					result = new Color(r.doubleValue() / 255d, g.doubleValue() / 255d, b.doubleValue() / 255d, 1.0d);
+				}
+			} catch (NumberFormatException nfe) {
+				// just ignore and return the default value
+			}
+		}
+		return result;
+	}
 }

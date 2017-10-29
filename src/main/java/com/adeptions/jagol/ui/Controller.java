@@ -1,11 +1,13 @@
 package com.adeptions.jagol.ui;
 
+import com.adeptions.jagol.cli.CommandController;
 import com.adeptions.jagol.config.GameConfig;
 import com.adeptions.jagol.logic.*;
 import com.adeptions.jagol.logic.rule.*;
 import com.adeptions.jagol.patterns.*;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,7 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Controller {
+public class Controller implements IController {
 	private static Controller instance = null;
 	public static Controller getInstance() {
 		return instance;
@@ -43,6 +45,7 @@ public class Controller {
 	private Timeline animationLoop = null;
 	private PatternLibrary patternLibrary;
 
+	private CommandController cliController;
 	private boolean running = false;
 	private boolean ruleChanging = false;
 
@@ -172,6 +175,7 @@ public class Controller {
 		cellSizeSpinner.getValueFactory().valueProperty().addListener((obs, oldValue, newValue) -> {
 			gameConfig.setCellSize((Integer)newValue);
 			drawBoard();
+			animationSaver.step();
 			rebuildPatterns();
 		});
 		permutationSpinner.getValueFactory().valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -267,6 +271,12 @@ public class Controller {
 		drawBoard();
 		loadPatterns();
 		mainPane.setDisable(false);
+
+		// start the command line controller...
+		cliController = new CommandController(this);
+		mainPane.getScene().getWindow().setOnCloseRequest(event -> {
+			cliController.close();
+		});
 	}
 
 	private void syncControlsToSettings() {
@@ -556,7 +566,7 @@ public class Controller {
 		*/
 	}
 
-	private void run() {
+	private void doRun() {
 		running = true;
 		updateControls();
 		clearBlinkCell();
@@ -567,7 +577,7 @@ public class Controller {
 		animationLoop.play();
 	}
 
-	private void stop() {
+	private void doStop() {
 		animationLoop.stop();
 		running = false;
 		updateControls();
@@ -585,7 +595,7 @@ public class Controller {
 		}
 		animationSaver.step();
 		if (changes.size() == 0 && running) {
-			stop();
+			doStop();
 		}
 	}
 
@@ -602,7 +612,7 @@ public class Controller {
 
 	@FXML
 	public void onPlayButtonClick(ActionEvent actionEvent) {
-		run();
+		doRun();
 	}
 
 	@FXML
@@ -612,7 +622,7 @@ public class Controller {
 
 	@FXML
 	public void onStopButtonClick(ActionEvent actionEvent) {
-		stop();
+		doStop();
 	}
 
 	@FXML
@@ -1102,7 +1112,7 @@ public class Controller {
 			if (codePoint > 32 && codePoint < 127) {
 				IPattern characterPattern = AlphabetPatterns.patternForChar(typedChar.charAt(0));
 				if (characterPattern != null) {
-					synchronized (characterPattern) {
+					synchronized (canvasGraphicsContext) {
 						int top = Math.max(0, currentCellPosition.getRow() - (characterPattern.rows() - 2));
 						board.drawPattern(top, currentCellPosition.getColumn(), characterPattern);
 						redrawBoardArea(top, currentCellPosition.getColumn(), characterPattern.rows(), characterPattern.columns());
@@ -1207,5 +1217,301 @@ public class Controller {
 			animationSaver.end();
 		}
 		saveAnimationToTextField.setVisible(animationSaver.isSaving());
+	}
+
+	@Override
+	public void run() {
+		if (!running) {
+			doRun();
+		}
+	}
+
+	@Override
+	public void stop() {
+		if (running) {
+			doStop();
+		}
+	}
+
+	@Override
+	public void step() {
+		if (!running) {
+			generation();
+		}
+	}
+
+	@Override
+	public void clear() {
+		if (!running) {
+			createBoard(false);
+			drawBoard();
+			animationSaver.step();
+		}
+	}
+
+	@Override
+	public void randomize(Double density) {
+		if (!running) {
+			if (density != null) {
+				gameConfig.setRandomizationDensity(density);
+				randomDensitySlider.valueProperty().setValue(gameConfig.getRandomizationDensity());
+			}
+			createBoard(true);
+			drawBoard();
+			animationSaver.step();
+		}
+	}
+
+	@Override
+	public String set(String settingName, Object settingValue) {
+		String result = null;
+		if (settingName != null) {
+			if (settingValue != null && SETTING_NAME_RUNNING.equals(settingName)) {
+				if (running && !(Boolean)settingValue) {
+					doStop();
+				} else if (!running && (Boolean)settingValue) {
+					doRun();
+				}
+			} else if (settingValue != null && !running) {
+				switch (settingName) {
+					case SETTING_NAME_WIDTH:
+						Platform.runLater(() -> {
+							boardWidthSpinner.getValueFactory().setValue(settingValue);
+							resizeBoard();
+						});
+						return SETTING_NAME_WIDTH + " = " + settingValue;
+					case SETTING_NAME_HEIGHT:
+						Platform.runLater(() -> {
+							boardHeightSpinner.getValueFactory().setValue(settingValue);
+							resizeBoard();
+						});
+						return SETTING_NAME_HEIGHT + " = " + settingValue;
+					case SETTING_NAME_DELAY:
+						gameConfig.setGenerationDelay((Double)settingValue);
+						Platform.runLater(() -> {
+							animationSpeedSlider.valueProperty().setValue(gameConfig.getGenerationDelay());
+						});
+						break;
+					case SETTING_NAME_RULE:
+						Platform.runLater(() -> {
+							ruleChange((IChangeAliveRule)settingValue);
+						});
+						return SETTING_NAME_RULE + " = " + ((IChangeAliveRule)settingValue).getType();
+					case SETTING_NAME_PERMUTATION:
+						Platform.runLater(() -> {
+							permutationSpinner.getValueFactory().setValue((Integer)settingValue);
+							ruleChange(ChangeAliveRuleFactory.getPermutationRule((Integer)settingValue));
+						});
+						return SETTING_NAME_PERMUTATION + " = " + settingValue;
+					case SETTING_NAME_RANDOMIZATION:
+						gameConfig.setRandomizationDensity((Double)settingValue);
+						Platform.runLater(() -> {
+							randomDensitySlider.valueProperty().setValue(gameConfig.getRandomizationDensity());
+						});
+						break;
+					case SETTING_NAME_WRAPPING:
+						gameConfig.setWrappingMode((BoardWrappingMode)settingValue);
+						Platform.runLater(() -> {
+							wrappingCombo.setValue(gameConfig.getWrappingMode().getLabel());
+						});
+						break;
+					case SETTING_NAME_SIZE:
+						gameConfig.setCellSize((Integer)settingValue);
+						Platform.runLater(() -> {
+							cellSizeSpinner.getValueFactory().setValue(gameConfig.getCellSize());
+							drawBoard();
+							animationSaver.step();
+							rebuildPatterns();
+						});
+						break;
+					case SETTING_NAME_ACTIVE_COLOR:
+						gameConfig.setCellActiveColor((Color)settingValue);
+						Platform.runLater(() -> {
+							activeCellColorPicker.setValue(gameConfig.getCellActiveColor());
+							drawBoard();
+							animationSaver.step();
+							rebuildPatterns();
+						});
+						break;
+					case SETTING_NAME_INACTIVE_COLOR:
+						gameConfig.setCellInactiveColor((Color)settingValue);
+						Platform.runLater(() -> {
+							inActiveCellColorPicker.setValue(gameConfig.getCellInactiveColor());
+							drawBoard();
+							animationSaver.step();
+							rebuildPatterns();
+						});
+						break;
+					case SETTING_NAME_SHOW_GRID:
+						gameConfig.setCellSpace((Boolean)settingValue ? 1 : 0);
+						Platform.runLater(() -> {
+							drawGridCheckbox.setSelected(gameConfig.getCellSpace() > 0);
+							drawBoard();
+							animationSaver.step();
+							rebuildPatterns();
+						});
+						break;
+					case SETTING_NAME_GRID_COLOR:
+						gameConfig.setCellGridColor((Color)settingValue);
+						Platform.runLater(() -> {
+							gridColorPicker.setValue(gameConfig.getCellGridColor());
+							drawBoard();
+							animationSaver.step();
+							rebuildPatterns();
+						});
+						break;
+				}
+			}
+			switch (settingName) {
+				case SETTING_NAME_RUNNING:
+					return SETTING_NAME_RUNNING + " = " + (running ? "yes" : "no");
+				case SETTING_NAME_WIDTH:
+					return SETTING_NAME_WIDTH + " = " + gameConfig.getColumns();
+				case SETTING_NAME_HEIGHT:
+					return SETTING_NAME_HEIGHT + " = " + gameConfig.getRows();
+				case SETTING_NAME_DELAY:
+					return SETTING_NAME_DELAY + " = " + gameConfig.getGenerationDelay();
+				case SETTING_NAME_RULE:
+					return SETTING_NAME_RULE + " = " + gameConfig.getChangeAliveRule().getType();
+				case SETTING_NAME_PERMUTATION:
+					return SETTING_NAME_PERMUTATION + " = " + permutationSpinner.getValueFactory().getValue();
+				case SETTING_NAME_RANDOMIZATION:
+					return SETTING_NAME_RANDOMIZATION + " = " + gameConfig.getRandomizationDensity();
+				case SETTING_NAME_WRAPPING:
+					return SETTING_NAME_WRAPPING + " = " + gameConfig.getWrappingMode().getLabel();
+				case SETTING_NAME_SIZE:
+					return SETTING_NAME_SIZE + " = " + gameConfig.getCellSize();
+				case SETTING_NAME_ACTIVE_COLOR:
+					return SETTING_NAME_ACTIVE_COLOR + " = " + GameConfig.colorToHtml(gameConfig.getCellActiveColor());
+				case SETTING_NAME_INACTIVE_COLOR:
+					return SETTING_NAME_INACTIVE_COLOR + " = " + GameConfig.colorToHtml(gameConfig.getCellInactiveColor());
+				case SETTING_NAME_SHOW_GRID:
+					return SETTING_NAME_SHOW_GRID + " = " + (gameConfig.getCellSpace() > 0 ? "on" : "off");
+				case SETTING_NAME_GRID_COLOR:
+					return SETTING_NAME_GRID_COLOR + " = " + GameConfig.colorToHtml(gameConfig.getCellGridColor());
+			}
+		} else {
+			StringBuilder builder = new StringBuilder();
+			builder.append(SETTING_NAME_RUNNING).append(" = ").append(running ? "yes" : "no").append("\n")
+					.append(SETTING_NAME_WIDTH).append(" = ").append(gameConfig.getColumns()).append("\n")
+					.append(SETTING_NAME_HEIGHT).append(" = ").append(gameConfig.getRows()).append("\n")
+					.append(SETTING_NAME_DELAY).append(" = ").append(gameConfig.getGenerationDelay()).append("\n")
+					.append(SETTING_NAME_RULE).append(" = ").append(gameConfig.getChangeAliveRule().getType()).append("\n")
+					.append(SETTING_NAME_PERMUTATION).append(" = ").append(permutationSpinner.getValueFactory().getValue()).append("\n")
+					.append(SETTING_NAME_RANDOMIZATION).append(" = ").append(gameConfig.getRandomizationDensity()).append("\n")
+					.append(SETTING_NAME_WRAPPING).append(" = ").append(gameConfig.getWrappingMode().getLabel()).append("\n")
+					.append(SETTING_NAME_SIZE).append(" = ").append(gameConfig.getCellSize()).append("\n")
+					.append(SETTING_NAME_ACTIVE_COLOR).append(" = ").append(GameConfig.colorToHtml(gameConfig.getCellActiveColor())).append("\n")
+					.append(SETTING_NAME_INACTIVE_COLOR).append(" = ").append(GameConfig.colorToHtml(gameConfig.getCellInactiveColor())).append("\n")
+					.append(SETTING_NAME_SHOW_GRID).append(" = ").append(gameConfig.getCellSpace() > 0 ? "on" : "off").append("\n")
+					.append(SETTING_NAME_GRID_COLOR).append(" = ").append(GameConfig.colorToHtml(gameConfig.getCellGridColor()));
+			result = builder.toString();
+		}
+		return result;
+	}
+
+	@Override
+	public String permutationIncrement(Integer increment) {
+		if (!running) {
+			Integer currentValue = (Integer)permutationSpinner.getValue();
+			Integer newValue = currentValue + increment;
+			if (newValue >= 0 && newValue < 262144) {
+				Platform.runLater(() -> {
+					permutationSpinner.getValueFactory().setValue(newValue);
+					ruleChange(ChangeAliveRuleFactory.getPermutationRule(newValue));
+				});
+				return newValue.toString();
+			} else {
+				return currentValue.toString();
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public String position(GridPosition newPosition) {
+		if (newPosition != null && !currentCellPosition.equals(newPosition)) {
+			changeCurrentCellPosition(new GridPosition(Math.min(newPosition.getRow(), gameConfig.getRows() - 1), Math.min(newPosition.getColumn(), gameConfig.getColumns() - 1)));
+		}
+		return "row = " + currentCellPosition.getRow() + ", column = " + currentCellPosition.getColumn();
+	}
+
+	@Override
+	public void live(GridPosition position) {
+		if (!running) {
+			GridPosition atPosition = position != null ? position : currentCellPosition;
+			if (atPosition.getRow() >= 0 && atPosition.getRow() < gameConfig.getRows() &&
+					atPosition.getColumn() >= 0 && atPosition.getColumn() < gameConfig.getColumns()) {
+				board.cell(atPosition.getRow(), atPosition.getColumn()).isAlive(true);
+				drawCell(board.cell(atPosition.getRow(), atPosition.getColumn()));
+				if (position == null) {
+					changeCurrentCellPosition(incrementCurrentPosition());
+				} else {
+					changeCurrentCellPosition(atPosition);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void die(GridPosition position) {
+		if (!running) {
+			GridPosition atPosition = position != null ? position : currentCellPosition;
+			if (atPosition.getRow() >= 0 && atPosition.getRow() < gameConfig.getRows() &&
+					atPosition.getColumn() >= 0 && atPosition.getColumn() < gameConfig.getColumns()) {
+				board.cell(atPosition.getRow(), atPosition.getColumn()).isAlive(false);
+				drawCell(board.cell(atPosition.getRow(), atPosition.getColumn()));
+				if (position == null) {
+					changeCurrentCellPosition(incrementCurrentPosition());
+				} else {
+					changeCurrentCellPosition(atPosition);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void drawPatternStrings(List<String> lines) {
+		int startColumn = currentCellPosition.getColumn();
+		int startRow = currentCellPosition.getRow();
+		int maxWidth = -1;
+		for (int row = 0; row < lines.size() && (row + startRow) < gameConfig.getRows(); row++) {
+			String line = lines.get(row).trim();
+			maxWidth = Math.max(maxWidth, line.length());
+			for (int column = 0; column < line.length() && (column + startColumn) < gameConfig.getColumns(); column++) {
+				board.cell(row + startRow, column + startColumn).isAlive(line.charAt(column) == '1' || line.charAt(column) == 'O');
+				drawCell(board.cell(row + startRow, column + startColumn));
+			}
+		}
+		changeCurrentCellPosition(new GridPosition(
+				Math.min(gameConfig.getRows() - 1, currentCellPosition.getRow() + lines.size()),
+				Math.min(gameConfig.getColumns() - 1, startColumn)
+		));
+	}
+
+	private GridPosition incrementCurrentPosition() {
+		if (currentCellPosition.getColumn() < (gameConfig.getColumns() - 1)) {
+			return new GridPosition(currentCellPosition.getRow(), currentCellPosition.getColumn() + 1);
+		} else if (currentCellPosition.getRow() < (gameConfig.getRows() - 1)) {
+			return new GridPosition(currentCellPosition.getRow() + 1, 0);
+		} else {
+			return new GridPosition(0,0);
+		}
+	}
+
+	@Override
+	public void print(String str) {
+		if (!running) {
+			IPattern stringPattern = AlphabetPatterns.stringToPattern(str);
+			if (stringPattern != null) {
+				synchronized (canvasGraphicsContext) {
+					int top = Math.max(0, currentCellPosition.getRow() - (stringPattern.rows() - 2));
+					board.drawPattern(top, currentCellPosition.getColumn(), stringPattern);
+					redrawBoardArea(top, currentCellPosition.getColumn(), stringPattern.rows(), stringPattern.columns());
+					changeCurrentCellPosition(new GridPosition(top + (stringPattern.rows() - 2), Math.min(gameConfig.getColumns() - 1, currentCellPosition.getColumn() + stringPattern.columns() + 1)));
+					animationSaver.step();
+				}
+			}
+		}
 	}
 }
