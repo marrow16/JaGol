@@ -381,10 +381,12 @@ public class Controller implements IController {
 				AlphabetPatterns.stringToPattern("Of"),
 				AlphabetPatterns.stringToPattern("Life")
 		};
-		int atRow = (gameConfig.getRows() - ((AlphabetPatterns.CHAR_HEIGHT + 1) * lines.length)) / 2;
+		int atRow = Math.max(0, (gameConfig.getRows() - ((AlphabetPatterns.CHAR_HEIGHT + 1) * lines.length)) / 2);
 		for (IPattern line: lines) {
-			board.drawPattern(atRow, (gameConfig.getColumns() - line.columns()) / 2, line);
-			atRow += (AlphabetPatterns.CHAR_HEIGHT + 1);
+			if (atRow < gameConfig.getRows()) {
+				board.drawPattern(atRow, Math.max(0, (gameConfig.getColumns() - line.columns()) / 2), line);
+				atRow += (AlphabetPatterns.CHAR_HEIGHT + 1);
+			}
 		}
 	}
 
