@@ -118,4 +118,18 @@ public class GameConfigLoadSaveWrapper {
 			ChangeAliveRuleFactory.registerNamedCustom(wrapper.getActualRule());
 		}
 	}
+
+	public boolean getCellsAge() {
+		return config.getCellsAge();
+	}
+	public void setCellsAge(boolean cellsAge) {
+		config.setCellsAge(cellsAge);
+	}
+
+	public int getMaximumCellAge() {
+		return config.getMaximumCellAge();
+	}
+	public void setMaximumCellAge(int maximumCellAge) {
+		config.setMaximumCellAge(maximumCellAge);
+	}
 }

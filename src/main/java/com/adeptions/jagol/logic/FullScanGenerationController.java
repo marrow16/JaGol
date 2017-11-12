@@ -8,6 +8,8 @@ public class FullScanGenerationController implements IGenerationController {
 	private List<ICell> cells;;
 	private GenerationState state;
 	private IChangeAliveRule changeAliveRule;
+	private boolean cellsAge;
+	private long maximumCellAge;
 
 	public FullScanGenerationController(IChangeAliveRule changeAliveRule) {
 		if (changeAliveRule == null) {
@@ -44,9 +46,22 @@ public class FullScanGenerationController implements IGenerationController {
 	@Override
 	public List<ICell> nextGeneration() {
 		List<ICell> changedCells = new ArrayList<>(cells.size());
-		for (ICell cell: cells) {
-			if (changeAliveRule.evaluate(cell)) {
-				changedCells.add(cell);
+		if (cellsAge) {
+			for (ICell cell : cells) {
+				if (changeAliveRule.evaluate(cell)) {
+					changedCells.add(cell);
+				} else if (cell.isAlive()) {
+					cell.age();
+					if (cell.getAge() > maximumCellAge) {
+						changedCells.add(cell);
+					}
+				}
+			}
+		} else {
+			for (ICell cell : cells) {
+				if (changeAliveRule.evaluate(cell)) {
+					changedCells.add(cell);
+				}
 			}
 		}
 		state = changedCells.size() > 0 ? GenerationState.READY : GenerationState.STABLE;
@@ -64,5 +79,25 @@ public class FullScanGenerationController implements IGenerationController {
 	@Override
 	public void setChangeAliveRule(IChangeAliveRule changeAliveRule) {
 		this.changeAliveRule = changeAliveRule;
+	}
+
+	@Override
+	public boolean getCellAge() {
+		return cellsAge;
+	}
+
+	@Override
+	public void setCellsAge(boolean cellsAge) {
+		this.cellsAge = cellsAge;
+	}
+
+	@Override
+	public long getMaximumCellAge() {
+		return maximumCellAge;
+	}
+
+	@Override
+	public void setMaximumCellAge(long maximumCellAge) {
+		this.maximumCellAge = maximumCellAge;
 	}
 }

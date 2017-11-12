@@ -26,6 +26,8 @@ public class GameConfig {
 	private Color cellInactiveColor = Color.WHITE;
 	private Color cellGridColor = Color.LIGHTGRAY;
 	private Color boardBorderColor = Color.BLACK;
+	private boolean cellsAge;
+	private int maximumCellAge = 16;
 
 	GameConfig() {
 	}
@@ -157,6 +159,19 @@ public class GameConfig {
 		this.changeAliveRule = changeAliveRule;
 	}
 
+	public boolean getCellsAge() {
+		return cellsAge;
+	}
+	public void setCellsAge(boolean cellsAge) {
+		this.cellsAge = cellsAge;
+	}
+
+	public int getMaximumCellAge() {
+		return maximumCellAge;
+	}
+	public void setMaximumCellAge(int maximumCellAge) {
+		this.maximumCellAge = maximumCellAge;
+	}
 
 	public String toJson() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();

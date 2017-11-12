@@ -115,6 +115,9 @@
 										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
 										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="8.0" prefHeight="8.0" vgrow="NEVER" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+										<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 										<RowConstraints vgrow="ALWAYS" />
 									</rowConstraints>
 									<children>
@@ -191,8 +194,16 @@
 												<Insets left="4.0" right="4.0" />
 											</GridPane.margin>
 										</Separator>
-										<Label prefHeight="17.0" text="Wrapping:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="15" />
-										<ComboBox fx:id="wrappingCombo" onAction="#onWrappingChanged" prefHeight="25.0" GridPane.columnIndex="1" GridPane.rowIndex="15">
+										<CheckBox fx:id="cellsAgeCheckbox" onAction="#onCellsAgeCheckboxChanged" selected="false" text="Cells age" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="15" />
+										<Label fx:id="maximumCellAgeLabel" disable="true" prefHeight="17.0" text="Maximum age:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="16" />
+										<Spinner fx:id="maximumCellAgeSpinner" disable="true" prefWidth="75.0" GridPane.columnIndex="1" GridPane.rowIndex="16" />
+										<Separator prefWidth="200.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="17">
+											<GridPane.margin>
+												<Insets left="4.0" right="4.0" />
+											</GridPane.margin>
+										</Separator>
+										<Label prefHeight="17.0" text="Wrapping:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="18" />
+										<ComboBox fx:id="wrappingCombo" onAction="#onWrappingChanged" prefHeight="25.0" GridPane.columnIndex="1" GridPane.rowIndex="18">
 											<items>
 												<FXCollections fx:factory="observableArrayList">
 													<String fx:value="None" />
@@ -208,8 +219,7 @@
 												<Insets right="4" />
 											</GridPane.margin>
 										</ComboBox>
-										<CheckBox fx:id="deadCellEdgesCheckbox" onAction="#onDeadCellEdgesCheckboxChanged" selected="false" text="Dead cell edges" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="16" />
-
+										<CheckBox fx:id="deadCellEdgesCheckbox" onAction="#onDeadCellEdgesCheckboxChanged" selected="false" text="Dead cell edges" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="19" />
 									</children>
 									<padding>
 										<Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />

@@ -207,4 +207,24 @@ public class GenerationTests extends TestCase {
 		}
 	}
 
+	public void testDeadCellAgeing() throws Exception {
+		IBoard board = new Board(4, 4, null, false,
+				new FullScanGenerationController(new StandardConways()),
+				new int[] {
+						0,0,0,0,
+						0,1,1,0,
+						0,1,1,0,
+						0,0,0,0
+				});
+		board.generationController().setCellsAge(true);
+		board.generationController().setMaximumCellAge(1);
+		List<ICell> changed = board.generationController().nextGeneration();
+		assertEquals(0, changed.size());
+		changed = board.generationController().nextGeneration();
+		assertEquals(4, changed.size());
+		// they should all have died (of old age)...
+		for (ICell cell: changed) {
+			assertFalse("Cell should have died of old age", cell.isAlive());
+		}
+	}
 }

@@ -17,6 +17,16 @@ public class DeadCell implements ICell {
 	}
 
 	@Override
+	public long getAge() {
+		return 0L;
+	}
+
+	@Override
+	public void age() {
+		// dead cells never age
+	}
+
+	@Override
 	public Collection<ICell> adjacentCells() {
 		return adjacentCells;
 	}

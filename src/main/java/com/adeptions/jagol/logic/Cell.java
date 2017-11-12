@@ -6,6 +6,7 @@ public class Cell implements ICell {
 	private int row;
 	private int column;
 	private boolean alive;
+	private long age;
 	private List<ICell> adjacents = new ArrayList<>();
 
 	private Cell(int row, int column) {
@@ -35,7 +36,18 @@ public class Cell implements ICell {
 	public boolean isAlive(boolean newAlive) {
 		boolean changed = alive != newAlive;
 		alive = newAlive;
+		age = 0L;
 		return changed;
+	}
+
+	@Override
+	public long getAge() {
+		return age;
+	}
+
+	@Override
+	public void age() {
+		age++;
 	}
 
 	@Override

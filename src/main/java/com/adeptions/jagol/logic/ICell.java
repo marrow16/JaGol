@@ -6,6 +6,9 @@ public interface ICell {
 	boolean isAlive();
 	boolean isAlive(boolean newAlive);
 
+	long getAge();
+	void age();
+
 	Collection<ICell> adjacentCells();
 
 	int row();

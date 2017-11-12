@@ -19,7 +19,7 @@ public interface IChangeAliveRule {
 
 	boolean isCustom();
 
-	public static int countAdjacentsAlive(ICell cell) {
+	static int countAdjacentsAlive(ICell cell) {
 		int result = 0;
 		for (ICell adjacentCell: cell.adjacentCells()) {
 			result += (adjacentCell.isAlive() ? 1 : 0);

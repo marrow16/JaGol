@@ -1,8 +1,14 @@
 # JaGol (Conway's Game Of Life)
 
-Written for fun in Java using JavaFX
+_Written for fun in Java using JavaFX_
 
-Features:
+#### To run
+Dowload the latest [build](./built/jagol-2.6.jar) and execute from command line:-
+```sbtshell
+java -jar jagol-2.6.jar
+```
+
+#### Features:
 + Adjustable board size, generation speed and board drawing options
 + Supports different life rules (e.g. Standard, [HiLife](http://www.conwaylife.com/wiki/HighLife) or custom) 
 + Animation (gif) recording
@@ -14,6 +20,7 @@ Features:
     + hold `Alt+Ctrl` down to invert cell alive states
   + type something!
 + Additional command line interface
++ Cell ageing (cells can optionally die of old age)
 
 ![Screen Shot](https://user-images.githubusercontent.com/13290974/31861754-801105a8-b72a-11e7-829a-0e0fa7b29f9a.png)
 

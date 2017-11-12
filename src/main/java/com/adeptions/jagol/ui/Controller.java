@@ -135,6 +135,12 @@ public class Controller implements IController {
 	private CheckBox saveAnimationCheckbox;
 	@FXML
 	private TextField saveAnimationToTextField;
+	@FXML
+	private CheckBox cellsAgeCheckbox;
+	@FXML
+	private Spinner maximumCellAgeSpinner;
+	@FXML
+	private Label maximumCellAgeLabel;
 
 	@FXML
 	public void initialize() {
@@ -147,6 +153,8 @@ public class Controller implements IController {
 	public void shown() {
 		gameConfig = GameConfig.load();
 		permutationSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, ChangeAliveRuleFactory.getPermutationsCount()));
+		generationController.setCellsAge(gameConfig.getCellsAge());
+		generationController.setMaximumCellAge(gameConfig.getMaximumCellAge());
 		populateRuleCombo();
 		syncControlsToSettings();
 
@@ -189,6 +197,15 @@ public class Controller implements IController {
 					permutationSpinner.getValueFactory().setValue(ChangeAliveRuleFactory.getPermutationsCount());
 				}
 				ruleChange(ChangeAliveRuleFactory.getPermutationRule(newIntValue));
+			}
+		});
+		maximumCellAgeSpinner.getValueFactory().valueProperty().addListener((observable, oldValue, newValue) -> {
+			if (!running) {
+				Integer newIntValue = (Integer)newValue;
+				if (newIntValue != null && newIntValue >= 0) {
+					gameConfig.setMaximumCellAge(newIntValue);
+					generationController.setMaximumCellAge(newIntValue);
+				}
 			}
 		});
 		permutationSpinner.getEditor().setOnKeyPressed(event -> {
@@ -293,6 +310,10 @@ public class Controller implements IController {
 		inActiveCellColorPicker.setValue(gameConfig.getCellInactiveColor());
 		drawGridCheckbox.setSelected(gameConfig.getCellSpace() != 0);
 		gridColorPicker.setValue(gameConfig.getCellGridColor());
+		cellsAgeCheckbox.setSelected(gameConfig.getCellsAge());
+		maximumCellAgeSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, gameConfig.getMaximumCellAge()));
+		maximumCellAgeSpinner.setDisable(!gameConfig.getCellsAge());
+		maximumCellAgeLabel.setDisable(!gameConfig.getCellsAge());
 	}
 
 	private void buildPatternContextMenu() {
@@ -1515,5 +1536,12 @@ public class Controller implements IController {
 				}
 			}
 		}
+	}
+
+	public void onCellsAgeCheckboxChanged(ActionEvent actionEvent) {
+		maximumCellAgeSpinner.setDisable(!cellsAgeCheckbox.isSelected());
+		maximumCellAgeLabel.setDisable(!cellsAgeCheckbox.isSelected());
+		gameConfig.setCellsAge(cellsAgeCheckbox.isSelected());
+		generationController.setCellsAge(cellsAgeCheckbox.isSelected());
 	}
 }
