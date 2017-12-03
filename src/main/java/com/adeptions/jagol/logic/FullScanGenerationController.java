@@ -5,7 +5,7 @@ import com.adeptions.jagol.logic.rule.IChangeAliveRule;
 import java.util.*;
 
 public class FullScanGenerationController implements IGenerationController {
-	private List<ICell> cells;;
+	private List<ICell> cells;
 	private GenerationState state;
 	private IChangeAliveRule changeAliveRule;
 	private boolean cellsAge;
@@ -82,7 +82,7 @@ public class FullScanGenerationController implements IGenerationController {
 	}
 
 	@Override
-	public boolean getCellAge() {
+	public boolean getCellsAge() {
 		return cellsAge;
 	}
 

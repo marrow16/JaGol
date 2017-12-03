@@ -20,7 +20,7 @@ public interface IGenerationController {
 	IChangeAliveRule getChangeAliveRule();
 	void setChangeAliveRule(IChangeAliveRule changeAliveRule);
 
-	boolean getCellAge();
+	boolean getCellsAge();
 	void setCellsAge(boolean cellsAge);
 	long getMaximumCellAge();
 	void setMaximumCellAge(long maximumCellAge);
