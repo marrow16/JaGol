@@ -1,9 +1,11 @@
 # JaGol (Conway's Game Of Life)
+[![Apache Version 2 Licence](http://img.shields.io/:license-Apache%20v2-blue.svg)](LICENSE)
+[![Latest Build](https://img.shields.io/badge/download-jagol--2.6.1.jar-blue.svg)](./built/jagol-2.6.1.jar)
 
 _Written for fun in Java using JavaFX_
 
 #### To run
-Dowload the latest [build](./built/jagol-2.6.jar) and execute from command line:-
+Dowload the latest [build](./built/jagol-2.6.1.jar) and execute from command line:-
 ```sbtshell
 java -jar jagol-2.6.jar
 ```
