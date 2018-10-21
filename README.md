@@ -7,7 +7,7 @@ _Written for fun in Java using JavaFX_
 #### To run
 Dowload the latest [build](./built/jagol-2.6.1.jar) and execute from command line:-
 ```sbtshell
-java -jar jagol-2.6.jar
+java -jar jagol-2.6.1.jar
 ```
 
 #### Features:
