@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.adeptions.jagol.logic.BoardWrappingMode;
 import com.adeptions.jagol.logic.rule.ChangeAliveRuleFactory;
 import com.adeptions.jagol.logic.rule.StandardConways;
-import javafx.scene.paint.Color;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GameConfigLoadSaveWrapper {
